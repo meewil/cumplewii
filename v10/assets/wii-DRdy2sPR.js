@@ -1,0 +1,1 @@
+var e=`cumplewii`,t=`CumpleWii`,n=`fa-cake-candles`,r=`cumpleaños, gestion, eventos, recordatorios, celebraciones`,i=`Centro de gestion de cumpleaños para organizar celebraciones, fechas y recordatorios de forma clara y sencilla.`,a=`https://cumplewii.web.app`,o=2026,s=`@wilder.taype`,c=`https://wtaype.github.io/`;export{e as a,c,n as i,a as l,s as n,r as o,i as r,o as s,t};
