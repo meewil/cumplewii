@@ -1,9 +1,8 @@
 import './chat.css';
 import $ from 'jquery';
 import { db } from '../firebase.js';
-import { collection, getDocs, addDoc, doc, deleteDoc, query, orderBy, limit, startAfter, serverTimestamp } from 'firebase/firestore';
+import { collection, getDocs, addDoc, doc, deleteDoc, query, where, orderBy, limit, startAfter, serverTimestamp } from 'firebase/firestore';
 import { getls, savels, Notificacion, Capit, wiTiempo, wiAuth, wiSpin } from '../widev.js';
-import { cargarTodosEmpleados } from './zsmile.js';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const NS          = '.chat';
@@ -422,7 +421,7 @@ const _loadMensajes = async (forceReload = false) => {
   $('#chatHeader').addClass('smw_loading');
 
   try {
-    const q    = query(collection(db, 'chatSmiles'), orderBy('creado', 'desc'), limit(MSG_LIMIT));
+    const q    = query(collection(db, 'chatGrupal'), orderBy('creado', 'desc'), limit(MSG_LIMIT));
     const snap = await getDocs(q);
 
     // Reverse so oldest is first
@@ -478,7 +477,7 @@ const _loadAnteriores = async () => {
 
   try {
     const q = query(
-      collection(db, 'chatSmiles'),
+      collection(db, 'chatGrupal'),
       orderBy('creado', 'desc'),
       startAfter(cursor),
       limit(PAGE_LIMIT)
@@ -525,7 +524,21 @@ const _loadAnteriores = async () => {
 // ─── Load collaborators list ──────────────────────────────────────────────────
 const _loadColaboradores = async () => {
   try {
-    const data = await cargarTodosEmpleados(true); // only active participants
+    const q = query(collection(db, 'smiles'), where('estado', '==', 'activo'));
+    const snap = await getDocs(q);
+    const data = snap.docs.map(doc => {
+      const d = doc.data();
+      return {
+        usuario: doc.id,
+        nombre: d.nombre || '',
+        apellidos: d.apellidos || '',
+        imagen: d.avatar || d.imagen || '',
+        avatar: d.avatar || '',
+        rol: d.rol || 'usuario',
+        estado: d.estado || 'activo',
+        ...d
+      };
+    });
     colaboradores = data;
     _renderSidebar();
   } catch (err) {
@@ -575,7 +588,7 @@ const _enviarMensaje = async () => {
   _renderMessages(false);
 
   // Background send to Firestore
-  addDoc(collection(db, 'chatSmiles'), {
+  addDoc(collection(db, 'chatGrupal'), {
     texto,
     usuario: miUsuario,
     email:   wi?.email || '',
@@ -629,7 +642,7 @@ const _updateSendUI = () => {
     $btn.prop('disabled', false).removeClass('chat_send_disabled');
     $blk.hide();
   } else {
-    $ta.prop('disabled', true).attr('placeholder', 'No puedes enviar mensajes (participación inactiva)');
+    $ta.prop('disabled', true).attr('placeholder', 'No puedes enviar mensajes (cuenta inactiva o sin permisos)');
     $btn.prop('disabled', true).addClass('chat_send_disabled');
     $blk.show();
   }
@@ -646,7 +659,7 @@ export const init = async () => {
   if (wi) {
     miUsuario   = wi.usuario || wi.email || '';
     miNombre    = wi.nombre  || wi.usuario || 'Colaborador';
-    puedeEnviar = wi.participa === 'si';
+    puedeEnviar = wi.estado === 'activo' && (wi.rol === 'editor' || wi.rol === 'gestor' || wi.rol === 'admin');
   }
 
   // 3. Update input UI
@@ -720,7 +733,7 @@ export const init = async () => {
 
     try {
       const id = msgIdAEliminar;
-      await deleteDoc(doc(db, 'chatSmiles', id));
+      await deleteDoc(doc(db, 'chatGrupal', id));
       Notificacion('Mensaje eliminado permanentemente', 'success');
 
       // Close modal and clean up state

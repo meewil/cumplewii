@@ -2,7 +2,7 @@ import $ from 'jquery';
 import './perfil.css';
 import { auth, db } from '../firebase.js';
 import { updatePassword } from 'firebase/auth';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { getls, savels, wicopy, Mensaje, wiTip, Saludar, wiDate } from '../widev.js';
 import { rutas } from '../rutas.js';
 import { app, version } from '../wii.js';
@@ -31,7 +31,27 @@ export const render = () => {
   const tsCreacion = u.creacion || u.creado;
   const creado    = tsCreacion ? wiDate(null).get(tsCreacion, 'local') : 'Desconocido';
 
-  const defaultAvatar = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(nombre + ' ' + apellidos) + '&background=random&color=fff';
+  const tsActividad = u.ultActividad;
+  const actividad = tsActividad ? wiDate(null).get(tsActividad, 'local') : 'Recién activo';
+  const activo = u.activo !== false;
+  const estadoColor = estado === 'activo' ? 'var(--success)' : 'var(--error)';
+
+  let fechaNacimientoStr = '';
+  if (fechaNacimiento) {
+    try {
+      const dateObj = fechaNacimiento.toDate ? fechaNacimiento.toDate() : new Date(fechaNacimiento);
+      if (!isNaN(dateObj.getTime())) {
+        const yyyy = dateObj.getFullYear();
+        const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const dd = String(dateObj.getDate()).padStart(2, '0');
+        fechaNacimientoStr = `${yyyy}-${mm}-${dd}`;
+      }
+    } catch (e) {
+      console.warn('Error formatting birthdate:', e);
+    }
+  }
+
+  const defaultAvatar = '/smile.avif';
   const imagen = avatar || defaultAvatar;
 
   return `
@@ -39,7 +59,7 @@ export const render = () => {
 
     <div class="prf_hero">
       <div class="prf_av_wrap">
-        <img src="${imagen}" alt="${nombre}" class="prf_av" onerror="this.src='./smile.avif'">
+        <img src="${imagen}" alt="${nombre}" class="prf_av" onerror="this.src='/smile.avif'">
         <div class="prf_av_ring"></div>
       </div>
       <div class="prf_hero_info">
@@ -71,7 +91,7 @@ export const render = () => {
         <div class="prf_form_2col">
           <div class="prf_form_grp">
             <label>Fecha de Nacimiento</label>
-            <input type="date" id="prf_nacimiento" value="${fechaNacimiento}">
+            <input type="date" id="prf_nacimiento" value="${fechaNacimientoStr}">
           </div>
           <div class="prf_form_grp">
             <label>Género</label>
@@ -124,11 +144,19 @@ export const render = () => {
           </div>
           <div class="prf_row">
             <span class="prf_lbl"><i class="fas fa-signal"></i> Estado</span>
-            <span class="prf_val" style="color:var(--success)">${estado}</span>
+            <span class="prf_val" style="color:${estadoColor}">${estado}</span>
+          </div>
+          <div class="prf_row">
+            <span class="prf_lbl"><i class="fas fa-toggle-on"></i> Activo</span>
+            <span class="prf_val" style="color:${activo ? 'var(--success)' : 'var(--error)'}; font-weight: bold;">${activo ? 'Sí' : 'No'}</span>
           </div>
           <div class="prf_row">
             <span class="prf_lbl"><i class="fas fa-calendar-alt"></i> Registro</span>
             <span class="prf_val">${creado}</span>
+          </div>
+          <div class="prf_row">
+            <span class="prf_lbl"><i class="fas fa-history"></i> Actividad</span>
+            <span class="prf_val">${actividad}</span>
           </div>
           <div class="prf_row">
             <span class="prf_lbl"><i class="fas fa-user-tag"></i> Rol</span>
@@ -141,21 +169,82 @@ export const render = () => {
   </div>`;
 };
 
-export const init = () => {
-  if (!wi().email) return rutas.navigate('/');
+export const init = async () => {
+  const uLocal = wi();
+  if (!uLocal.email) return rutas.navigate('/');
+
+  // Sincronizar datos con Firestore al cargar para tener lo último y backfill
+  try {
+    const uSnap = await getDoc(doc(db, 'smiles', uLocal.usuario));
+    if (uSnap.exists()) {
+      const d = uSnap.data();
+      const cleanData = { ...d };
+
+      // Convertir a formatos JSON serializables idénticos a los del localStorage
+      if (cleanData.fechaNacimiento) {
+        try {
+          const dateObj = cleanData.fechaNacimiento.toDate ? cleanData.fechaNacimiento.toDate() : new Date(cleanData.fechaNacimiento);
+          cleanData.fechaNacimiento = !isNaN(dateObj.getTime()) ? dateObj.toISOString() : '';
+        } catch { cleanData.fechaNacimiento = ''; }
+      }
+      if (cleanData.creacion && cleanData.creacion.toDate) {
+        cleanData.creacion = cleanData.creacion.toDate().getTime();
+      }
+      if (cleanData.creado && cleanData.creado.toDate) {
+        cleanData.creado = cleanData.creado.toDate().getTime();
+      }
+      if (cleanData.ultActividad && cleanData.ultActividad.toDate) {
+        cleanData.ultActividad = cleanData.ultActividad.toDate().getTime();
+      } else if (cleanData.ultActividad) {
+        cleanData.ultActividad = new Date(cleanData.ultActividad).getTime();
+      }
+
+      const uNuevo = { ...uLocal, ...cleanData };
+      const actualJson = JSON.stringify(uLocal);
+      const nuevoJson = JSON.stringify(uNuevo);
+      
+      if (actualJson !== nuevoJson) {
+        savels('wiSmile', uNuevo, 24);
+        rutas.navigate('/perfil', false);
+        return;
+      }
+    }
+
+    const regRef = doc(db, 'registros', uLocal.usuario);
+    const regSnap = await getDoc(regRef);
+    if (!regSnap.exists()) {
+      await setDoc(regRef, {
+        usuario: uLocal.usuario,
+        email: uLocal.email,
+        uid: uLocal.uid,
+        creado: uLocal.creado || serverTimestamp()
+      });
+    }
+  } catch (e) {
+    console.warn('Sync Firestore perfil/registros error:', e);
+  }
   
   $(document)
+    .off('.prf')
     .on('click.prf', '#prf_guardar', async function () {
       const u = wi();
+      const rawNacimiento = $('#prf_nacimiento').val() || '';
+      let nacimientoTS = '';
+      if (rawNacimiento) {
+        const [yyyy, mm, dd] = rawNacimiento.split('-').map(Number);
+        nacimientoTS = new Date(yyyy, mm - 1, dd, 12, 0, 0);
+      }
+
       const updates = {
         nombre: $('#prf_nombre').val().trim(),
         apellidos: $('#prf_apellidos').val().trim(),
         avatar: $('#prf_avatar').val().trim(),
-        fechaNacimiento: $('#prf_nacimiento').val(),
+        fechaNacimiento: nacimientoTS,
         pais: $('#prf_pais').val().trim(),
         genero: $('#prf_genero').val() || '',
         gustos: $('#prf_gustos').val().trim(),
         bio: $('#prf_bio').val().trim(),
+        ultActividad: serverTimestamp()
       };
 
       if (!updates.nombre) return wiTip(document.getElementById('prf_nombre'), 'Ingresa tu nombre', 'error');
@@ -163,16 +252,32 @@ export const init = () => {
       $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Guardando...');
       try {
         await updateDoc(doc(db, 'smiles', u.usuario), updates);
-        savels('wiSmile', { ...u, ...updates }, 24);
+        
+        await setDoc(doc(db, 'registros', u.usuario), {
+          usuario: u.usuario,
+          email: u.email,
+          uid: u.uid,
+          actualizado: serverTimestamp()
+        }, { merge: true });
+
+        savels('wiSmile', { 
+          ...u, 
+          ...updates, 
+          fechaNacimiento: nacimientoTS ? nacimientoTS.toISOString() : '',
+          ultActividad: Date.now() 
+        }, 24);
         
         $('.prf_fullname').text(`${updates.nombre} ${updates.apellidos}`);
         if(updates.avatar) {
           $('.prf_av').attr('src', updates.avatar);
         } else {
-          $('.prf_av').attr('src', 'https://ui-avatars.com/api/?name=' + encodeURIComponent(updates.nombre + ' ' + updates.apellidos) + '&background=random&color=fff');
+          $('.prf_av').attr('src', '/smile.avif');
         }
         
         Mensaje('Perfil actualizado ✅', 'success');
+        
+        // Volver a cargar para actualizar todos los campos estáticos
+        setTimeout(() => rutas.navigate('/perfil', false), 1000);
       } catch (e) {
         console.error(e);
         Mensaje('Error al guardar', 'error');

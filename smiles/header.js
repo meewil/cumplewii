@@ -1,6 +1,6 @@
 import { app, icon } from './wii.js';
-import { rutas, NAV } from './rutas.js';
-import { wiAuth } from './widev.js';
+import { rutas, NAV, rolPage } from './rutas.js';
+import { wiAuth, superFun } from './widev.js';
 
 // ── LOGO — generado desde wii.js ─────────────────────────────────────────────
 const LOGO = `<a href="/"><i class="fa-solid ${icon}"></i> ${app}</a>`;
@@ -10,7 +10,7 @@ const buildNav = (items, wi) => items.map(i => {
   if (i.isBtn) return `<button class="${i.cls}"><i class="fas ${i.ico}"></i><span>${i.txt}</span></button>`;
   if (i.isPerfil) return `<a href="/perfil" class="nv_item" data-page="perfil"><img src="${wi?.avatar || `${import.meta.env.BASE_URL}smile.avif`}" alt="${wi?.nombre}"><span>${wi?.nombre}</span></a>`;
   if (i.isSalir) return `<button class="nv_item bt_salir" data-page="inicio"><i class="fa-solid fa-sign-out-alt"></i> <span>Salir</span></button>`;
-  return `<a href="${i.href}" class="nv_item" data-page="${i.page}"><i class="fas ${i.ico}"></i> <span>${i.txt}</span></a>`;
+  return `<a href="${i.href}" class="nv_item" data-page="${i.href === '/' ? 'inicio' : i.href.slice(1)}"><i class="fas ${i.ico}"></i> <span>${i.txt}</span></a>`;
 }).join('');
 
 const renderHeader = (wi, ruta = window.location.pathname) => {
@@ -91,3 +91,14 @@ const wi = wiAuth.user; wi ? renderHeader(wi) : renderHeader();
 
 // ── ROUTE LISTENER — re-renderiza el nav en cada navegación SPA ───────────────
 window.addEventListener('winavigate', ({ detail: { norm } }) => renderHeader(wiAuth.user, norm));
+
+// ── FIREBASE AUTH STATE — detecta pérdida de sesión en tiempo real (multi-pestaña) ──────────────
+const _salir = () => !window.isRel && (window.isRel = 1) &&
+  import('./todos/login.js').then(m => m.salir(['wiTema', 'wiSmart']).then(() => location.reload()));
+
+superFun(async () => {
+  const [{ auth }, { onAuthStateChanged }] = await Promise.all([import('./firebase.js'), import('firebase/auth')]);
+  onAuthStateChanged(auth, u => !u && wiAuth.user && _salir());
+});
+
+window.addEventListener('storage', e => (!e.key || e.key === 'wiSmile') && location.reload());

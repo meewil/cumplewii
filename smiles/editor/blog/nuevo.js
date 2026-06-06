@@ -354,6 +354,9 @@ export const init = async () => {
         // Limpiar caches del post editado  
         clearPostCache(editSlug);
         clearBlogCache();
+        if (typeof localStorage !== 'undefined') {
+          localStorage.removeItem(`wi_editor_posts_${(u.usuario || '').trim().toLowerCase()}`);
+        }
         Mensaje('¡Historia actualizada! 🐾✨', 'success');
         setTimeout(() => import('../../rutas.js').then(m => m.rutas.navigate(`/${editSlug}`)), 1200);
 
@@ -373,6 +376,9 @@ export const init = async () => {
         });
         clearBlogCache();
         localStorage.removeItem(draftKey);
+        if (typeof localStorage !== 'undefined') {
+          localStorage.removeItem(`wi_editor_posts_${(u.usuario || '').trim().toLowerCase()}`);
+        }
         Mensaje('¡Historia publicada! 🐾✨', 'success');
         setTimeout(() => import('../../rutas.js').then(m => m.rutas.navigate(`/${slug}`)), 1200);
       }

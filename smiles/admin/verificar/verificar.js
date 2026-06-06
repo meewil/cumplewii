@@ -1,10 +1,11 @@
 import './verificar.css';
 import $ from 'jquery';
-import { rutas } from '../rutas.js';
-import { Mensaje, wiAuth, getls } from '../widev.js';
-import { db, auth } from '../firebase.js';
+import { rutas } from '../../rutas.js';
+import { Mensaje, wiAuth, getls } from '../../widev.js';
+import { db, auth } from '../../firebase.js';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { app } from '../../wii.js';
 
 // ── ESPERAR SESIÓN DE FIREBASE ───────────────────────────────────────────────
 const waitAuth = () => new Promise(r => {
@@ -56,36 +57,17 @@ const guard = (user) => {
 
 // ── SVG LOGO GOOGLE AUTHENTICATOR (Premium) ───────────────────────────────────
 const SVG_GOOGLE_AUTH = `
-  <svg viewBox="0 0 100 100" class="vault_svg_logo" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="g_glow" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stop-color="#4285F4"/>
-        <stop offset="33%" stop-color="#EA4335"/>
-        <stop offset="66%" stop-color="#FBBC05"/>
-        <stop offset="100%" stop-color="#34A853"/>
-      </linearGradient>
-    </defs>
-    <!-- Glowing ring -->
-    <circle cx="50" cy="50" r="46" fill="none" stroke="url(#g_glow)" stroke-width="3" opacity="0.3" class="vault_glow_ring"/>
-    <!-- Outer white dial with shadow -->
-    <circle cx="50" cy="50" r="38" fill="var(--wb, #fff)" style="filter: drop-shadow(0px 8px 16px rgba(0,0,0,0.12))"/>
-    
-    <!-- Google Colors Dial segments -->
-    <path d="M 50,18 A 32,32 0 0,1 82,50 L 50,50 Z" fill="#4285F4"/>
-    <path d="M 82,50 A 32,32 0 0,1 50,82 L 50,50 Z" fill="#EA4335"/>
-    <path d="M 50,82 A 32,32 0 0,1 18,50 L 50,50 Z" fill="#FBBC05"/>
-    <path d="M 18,50 A 32,32 0 0,1 50,18 L 50,50 Z" fill="#34A853"/>
-    
-    <!-- White center hub with a lock keyhole -->
-    <circle cx="50" cy="50" r="16" fill="var(--wb, #fff)"/>
-    <circle cx="50" cy="46" r="4.5" fill="#1e293b"/>
-    <path d="M 47.5,46 L 52.5,46 L 54,58 L 46,58 Z" fill="#1e293b"/>
+  <svg viewBox="0 0 512 512" class="vault_svg_logo" xml:space="preserve">
+    <path fill="#1A73E8" d="M440,256.0v0.0C440,273.1,426.1,287,409.0,287H302l-46-93.0l49.7-86.0 c8.6-14.8,27.5-19.9,42.3-11.3l0.0,0.0c14.8,8.6,19.9,27.5,11.3,42.3 L309.7,225h99.3C426.1,225,440,238.9,440,256.0z"/>
+    <path fill="#EA4335" d="M348.0,415.3l-0.0,0.0c-14.8,8.6-33.8,3.5-42.3-11.3L256,318.0 l-49.7,86.0c-8.6,14.8-27.5,19.9-42.3,11.3l-0.0-0.0 c-14.8-8.6-19.9-27.5-11.3-42.3L202.3,287L256,285l53.7,2l49.7,86.0 C367.9,387.8,362.8,406.8,348.0,415.3z"/>
+    <path fill="#FBBC04" d="M256,194.0L242,232l-39.7-7l-49.7-86.0 c-8.6-14.8-3.5-33.8,11.3-42.3l0.0-0.0c14.8-8.6,33.8-3.5,42.3,11.3 L256,194.0z"/>
+    <path fill="#34A853" d="M248,225l-36,62H103.0C85.9,287,72,273.1,72,256.0v-0.0 C72,238.9,85.9,225,103.0,225H248z"/>
+    <polygon fill="#185DB7" points="309.7,287 202.3,287 256,194.0 "/>
   </svg>
 `;
 
 // ── INNER TEMPLATES ───────────────────────────────────────────────────────────
 const HTML_INNER_SETUP = `
-  <div class="vault_badge">Admin</div>
   <h1 class="vault_title">Configura tu Bóveda</h1>
   <p class="vault_subtitle">Escanea este código QR con <strong>Google Authenticator</strong> para proteger el panel de administración.</p>
 
@@ -158,7 +140,7 @@ function _iniciarTimer() {
       localStorage.removeItem('vault_expire');
       Mensaje('Sesión cerrada por inactividad', 'error');
       
-      const { salir } = await import('../todos/login.js');
+      const { salir } = await import('../../todos/login.js');
       await salir();
     }
   };
@@ -168,6 +150,12 @@ function _iniciarTimer() {
     _intervaloTimer = setInterval(tick, 1000);
   }
 }
+
+const _bloquearTema = (e) => {
+  e.stopPropagation();
+  e.preventDefault();
+  Mensaje('<i class="fas fa-exclamation-circle"></i> No está permitido cambiar de tema en esta página.', 'warning');
+};
 
 // ── RENDER ────────────────────────────────────────────────────────────────────
 // Renderizamos sincrónicamente el esqueleto de la bóveda para evitar pantallas blancas en F5
@@ -197,6 +185,14 @@ export const init = async () => {
   // 1. Activar el bloqueo Zero-Trust y arrancar el temporizador de inmediato
   $('body').addClass('is-vault-locked');
   _iniciarTimer();
+
+  const wiTema = document.getElementById('wiTema');
+  if (wiTema) {
+    wiTema.addEventListener('click', _bloquearTema, { capture: true });
+    wiTema.style.opacity = '0.4';
+    wiTema.style.cursor = 'not-allowed';
+    wiTema.querySelectorAll('.tema').forEach(t => t.style.cursor = 'not-allowed');
+  }
 
   // 2. Blindaje Programático "Top Mundial": Bloquear navegación, clic derecho, copiar, pegar y shortcuts de desarrollador
   $(document).off('.vault_shield');
@@ -289,7 +285,7 @@ async function _initSetup(wi) {
 
   _secret = generateSecret();
 
-  const issuer  = 'WiiBlock';
+  const issuer  =  app;
   const sm       = getls('wiSmile');
   const account  = encodeURIComponent(sm?.usuario || wi.usuario);
   const otpauth  = `otpauth://totp/${issuer}:${account}?secret=${_secret}&issuer=${issuer}&algorithm=SHA1&digits=6&period=30`;
@@ -393,4 +389,12 @@ export const cleanup = () => {
   $('body').removeClass('is-vault-locked');
   $(document).off('.vault');
   $(document).off('.vault_shield');
+
+  const wiTema = document.getElementById('wiTema');
+  if (wiTema) {
+    wiTema.removeEventListener('click', _bloquearTema, { capture: true });
+    wiTema.style.opacity = '';
+    wiTema.style.cursor = '';
+    wiTema.querySelectorAll('.tema').forEach(t => t.style.cursor = '');
+  }
 };

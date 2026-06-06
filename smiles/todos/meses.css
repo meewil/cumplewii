@@ -1,0 +1,289 @@
+/* ==================== PREMIUM MONTHS/CALENDAR STYLESHEET ==================== */
+.ms_wrap {
+  margin: 0 auto;
+  padding: 3vh 2vh 6vh;
+  display: flex;
+  flex-direction: column;
+  gap: 4vh;
+  width: 100%;
+  font-family: var(--ff_P), sans-serif;
+  max-width: 1200px;
+}
+
+/* --- TWO COLUMN LAYOUT --- */
+.ms_container {
+  display: flex;
+  gap: 4vh;
+  width: 100%;
+  align-items: flex-start;
+}
+
+.ms_col_left {
+  flex: 1; /* Left column with the calendar */
+  display: flex;
+  flex-direction: column;
+  gap: 3vh;
+  min-width: 320px;
+}
+
+.ms_col_right {
+  flex: 1.5; /* Right column with the list */
+  display: flex;
+  flex-direction: column;
+  gap: 3vh;
+  min-width: 0;
+}
+
+/* --- HERO PREMIUM --- */
+.ms_hero {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--mco) 8%, var(--wb)) 0%, var(--wb) 100%);
+  border: 1px solid color-mix(in srgb, var(--brd) 80%, transparent);
+  border-radius: 2.5vh;
+  padding: 4vh;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.03), 0 1px 3px rgba(0, 0, 0, 0.01);
+}
+
+.ms_hero_title {
+  font-size: var(--fz_m5);
+  font-weight: 900;
+  color: var(--tx1);
+  letter-spacing: -0.5px;
+}
+
+.ms_hero_subtitle {
+  font-size: var(--fz_m1);
+  color: var(--tx3);
+  margin-top: 1vh;
+}
+
+/* --- MONTH NAVIGATOR --- */
+.ms_nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--wb);
+  border: 1px solid color-mix(in srgb, var(--brd) 70%, transparent);
+  border-radius: 2vh;
+  padding: 2vh 3vh;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.01);
+}
+
+.ms_nav_btn {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 1px solid var(--brd);
+  background: var(--wb);
+  color: var(--tx1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.1rem;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+}
+
+.ms_nav_btn:hover {
+  background: var(--bg);
+  color: var(--mco);
+  border-color: color-mix(in srgb, var(--mco) 30%, var(--brd));
+  transform: scale(1.08);
+}
+
+.ms_nav_title {
+  font-size: var(--fz_m3);
+  font-weight: 800;
+  color: var(--tx1);
+}
+
+/* --- CALENDAR GRID PREMIUM --- */
+.ms_calendar {
+  background: var(--wb);
+  border: 1px solid color-mix(in srgb, var(--brd) 70%, transparent);
+  border-radius: 2.5vh;
+  padding: 3vh 3.5vh;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.015);
+}
+
+.ms_weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  margin-bottom: 2vh;
+  border-bottom: 1px solid color-mix(in srgb, var(--brd) 50%, transparent);
+  padding-bottom: 1vh;
+}
+
+.ms_weekday {
+  font-size: var(--fz_s3);
+  font-weight: 800;
+  color: var(--tx3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 0.5vh 0;
+}
+
+.ms_days_grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1.5vh;
+}
+
+.ms_day_cell {
+  aspect-ratio: 1;
+  background: color-mix(in srgb, var(--bg) 40%, var(--wb));
+  border: 1px solid var(--brd);
+  border-radius: 1.8vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ms_day_cell:hover {
+  border-color: color-mix(in srgb, var(--mco) 50%, var(--brd));
+  background: var(--wb);
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.05);
+}
+
+.ms_day_cell.empty {
+  background: transparent;
+  border: none;
+  cursor: default;
+  pointer-events: none;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.ms_day_num {
+  font-size: var(--fz_m1);
+  font-weight: 800;
+  color: var(--tx1);
+}
+
+.ms_day_cell.today {
+  border: 2px solid var(--mco);
+  background: color-mix(in srgb, var(--mco) 10%, var(--wb));
+  box-shadow: inset 0 0 10px color-mix(in srgb, var(--mco) 8%, transparent);
+}
+
+.ms_day_cell.selected {
+  background: linear-gradient(135deg, var(--mco) 0%, color-mix(in srgb, var(--mco) 85%, #000) 100%);
+  border-color: var(--mco);
+  box-shadow: 0 6px 15px -4px color-mix(in srgb, var(--mco) 35%, transparent);
+}
+
+.ms_day_cell.selected .ms_day_num {
+  color: var(--txa);
+}
+
+/* Birthday dot indicator */
+.ms_day_cell.has_birthdays::after {
+  content: '';
+  position: absolute;
+  bottom: 15%;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ff5c69;
+  box-shadow: 0 0 6px rgba(255, 92, 105, 0.6);
+}
+
+.ms_day_cell.selected.has_birthdays::after {
+  background: var(--txa);
+  box-shadow: none;
+}
+
+.ms_day_cell.today.has_birthdays::after {
+  background: #ff5c69;
+}
+
+/* --- FILTER TITLE SECTION --- */
+.ms_list_header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2vh;
+  margin-top: 1.5vh;
+}
+
+.ms_list_title {
+  font-size: var(--fz_m3);
+  font-weight: 900;
+  color: var(--tx1);
+}
+
+.ms_clear_filter {
+  padding: 1vh 2.5vh;
+  border-radius: 50px;
+  font-size: var(--fz_s3);
+  font-weight: 800;
+  background: var(--wb);
+  color: var(--mco);
+  border: 1px solid var(--brd);
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.01);
+  transition: all 0.2s ease;
+}
+
+.ms_clear_filter:hover {
+  background: var(--mco);
+  color: var(--txa);
+  border-color: var(--mco);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px -4px color-mix(in srgb, var(--mco) 35%, transparent);
+}
+
+/* --- PREMIUM LIST OF BIRTHDAYS GRID --- */
+.ms_list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 3.5vh;
+}
+
+/* --- RESPONSIVE CALENDAR --- */
+@media (max-width: 900px) {
+  .ms_container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .ms_col_left, .ms_col_right {
+    flex: none;
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .ms_weekday {
+    font-size: var(--fz_s4);
+  }
+  .ms_day_num {
+    font-size: var(--fz_s2);
+  }
+  .ms_day_cell {
+    border-radius: 1.2vh;
+  }
+  .ms_day_cell.has_birthdays::after {
+    width: 5px;
+    height: 5px;
+    bottom: 12%;
+  }
+  .ms_list {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .ms_days_grid {
+    gap: 0.8vh;
+  }
+  .ms_weekday {
+    font-weight: 700;
+  }
+}

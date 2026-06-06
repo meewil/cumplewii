@@ -4,63 +4,36 @@ import { wiVista } from '../widev.js';
 
 const planes = [
   {
-    id: 'gratis', color: '#8b9bb4', name: 'Gratis', desc: 'Todo lo básico para empezar tu viaje digital.', price: '0',
+    id: 'free', color: '#8B9BB4', name: 'Free', desc: 'Todo lo básico para registrar y recordar.', price: '0',
     btn: 'Comenzar Gratis', btnType: 'outline',
     features: [
-      { t: '1 Perfil Linkwii', v: true },
-      { t: 'Enlaces ilimitados', v: true },
-      { t: '3 Temas estándar', v: true },
-      { t: 'Analíticas básicas (7 días)', v: true },
-      { t: 'Marca de agua Linkwii', v: true },
-      { t: 'Dominios personalizados', v: false }
+      { t: 'Cumples base', v: true },
+      { t: 'Avisos por defecto', v: true },
+      { t: 'Tema Oro', v: true },
+      { t: 'Temas premium', v: false },
+      { t: 'Soporte prioritario', v: false }
     ]
   },
   {
-    id: 'pro', color: '#0EBEFF', name: 'Pro', desc: 'Para creadores de contenido que quieren más.', price: '9',
-    btn: 'Elegir Pro', btnType: 'outline',
+    id: 'pro', color: '#0EBEFF', name: 'Pro', desc: 'Más capacidad y personalización.', price: '4.99',
+    btn: 'Elegir Pro', btnType: 'outline', destacado: true,
     features: [
-      { t: 'Todo lo de Gratis, más:', v: true },
-      { t: 'Temas premium desbloqueados', v: true },
-      { t: 'Analíticas avanzadas (90 días)', v: true },
-      { t: 'Sin marca de agua', v: true },
-      { t: 'Íconos animados en links', v: true },
-      { t: 'Soporte prioritario por email', v: true }
+      { t: 'Más cumples', v: true },
+      { t: 'Temas premium', v: true },
+      { t: 'Soporte prioritario', v: true },
+      { t: 'Multi-dispositivo', v: false },
+      { t: 'Soporte VIP', v: false }
     ]
   },
   {
-    id: 'promax', color: '#7000FF', name: 'Pro Max', desc: 'La herramienta definitiva para escalar tu audiencia.', price: '15',
-    btn: 'Obtener Pro Max', btnType: 'solid', destacado: true,
+    id: 'vip', color: '#7000FF', name: 'Vip', desc: 'El máximo nivel para celebrar mejor.', price: '9.99',
+    btn: 'Elegir VIP', btnType: 'solid',
     features: [
-      { t: 'Todo lo de Pro, más:', v: true },
-      { t: 'Hasta 3 Perfiles Linkwii', v: true },
-      { t: 'Integración Mailchimp / GA4', v: true },
-      { t: 'Formularios de captura (Leads)', v: true },
-      { t: 'Botones de pago (Stripe/PayPal)', v: true },
-      { t: 'Soporte VIP 24/7', v: true }
-    ]
-  },
-  {
-    id: 'negocio', color: '#FF8C00', name: 'Negocio', desc: 'Para tiendas y equipos que facturan en línea.', price: '20',
-    btn: 'Elegir Negocio', btnType: 'outline',
-    features: [
-      { t: 'Todo lo de Pro Max, más:', v: true },
-      { t: 'Dominio personalizado (.com)', v: true },
-      { t: 'Módulo de e-commerce nativo', v: true },
-      { t: 'Colaboradores (Hasta 5 admin)', v: true },
-      { t: 'Catálogo de productos (50 items)', v: true },
-      { t: 'API y Webhooks disponibles', v: true }
-    ]
-  },
-  {
-    id: 'empresa', color: '#29C72E', name: 'Empresa', desc: 'Soluciones a medida para grandes corporaciones.', price: 'Hablemos',
-    btn: 'Contactar Ventas', btnType: 'outline', customPrice: true,
-    features: [
-      { t: 'Perfiles ilimitados', v: true },
-      { t: 'Infraestructura en servidor dedicado', v: true },
-      { t: 'SLA garantizado del 99.9%', v: true },
-      { t: 'Gestor de éxito de cuenta asignado', v: true },
-      { t: 'Desarrollo de integraciones a medida', v: true },
-      { t: 'Facturación corporativa', v: true }
+      { t: 'Multi-dispositivo', v: true },
+      { t: 'Funciones futuras', v: true },
+      { t: 'Soporte VIP', v: true },
+      { t: 'Temas premium', v: true },
+      { t: 'Más cumples', v: true }
     ]
   }
 ];
@@ -68,9 +41,9 @@ const planes = [
 export const render = () => `
 <div class="pr_wrap">
   <div class="pr_hero pr_anim" style="--d:0s">
-    <div class="pr_badge"><i class="fas fa-tag"></i> Transparente y Sin Sorpresas</div>
-    <h1 class="pr_title">Precios diseñados <span class="pr_grad">para escalar</span></h1>
-    <p class="pr_desc">Ya sea que estés empezando o manejes una agencia global, tenemos el plan perfecto para maximizar tus conversiones a través de tu Link in Bio.</p>
+    <div class="pr_badge"><i class="fas fa-tag"></i> Planes Claros y Sin Complicaciones</div>
+    <h1 class="pr_title">Elige el plan ideal <span class="pr_grad">para celebrar</span></h1>
+    <p class="pr_desc">Empieza gratis y sube cuando quieras más capacidad, temas premium y funciones avanzadas.</p>
   </div>
   
   <div class="pr_grid">
@@ -101,7 +74,7 @@ export const render = () => `
           `).join('')}
         </ul>
         
-        <a href="/p/login" class="pr_btn pr_btn_${p.btnType}">${p.btn}</a>
+        <a href="/login" class="pr_btn pr_btn_${p.btnType} nv_item" data-page="login">${p.btn}</a>
       </div>
     `).join('')}
   </div>
@@ -109,24 +82,24 @@ export const render = () => `
   <!-- SECCIÓN COMPROMISO / VENTAS -->
   <div class="pr_trust_sec">
     <div class="pr_trust_head pr_anim" style="--d:0.2s">
-      <h2>¿Por qué confiar en <span>Linkwii</span>?</h2>
-      <p>No somos solo otra herramienta, somos tus socios tecnológicos para hacer crecer tu marca. Nuestro compromiso es brindarte el servicio más rápido y seguro del mercado.</p>
+      <h2>¿Por qué confiar en <span>${app}</span>?</h2>
+      <p>Sincroniza tus fechas más importantes con total seguridad y estabilidad. Diseñado especialmente para ayudarte a recordar y celebrar de la mejor manera.</p>
     </div>
     <div class="pr_trust_grid">
       <div class="pr_trust_card pr_anim" style="--d:0.3s">
         <i class="fas fa-bolt"></i>
-        <h3>Velocidad Absoluta</h3>
-        <p>Cada milisegundo cuenta. Optimizamos nuestros servidores para que tus enlaces carguen al instante y nunca pierdas un clic por demoras.</p>
+        <h3>Recordatorios al instante</h3>
+        <p>Sincronización inmediata para que nunca te olvides de felicitar a tus seres queridos.</p>
       </div>
       <div class="pr_trust_card pr_anim" style="--d:0.4s">
         <i class="fas fa-headset"></i>
-        <h3>Soporte Humano 24/7</h3>
-        <p>Olvídate de los bots frustrantes. Nuestro equipo está siempre dispuesto a ayudarte a configurar o escalar tu perfil cuando lo necesites.</p>
+        <h3>Soporte Amigable</h3>
+        <p>Ayuda dedicada para que disfrutes de tu agenda de cumpleaños en todos tus dispositivos sin complicaciones.</p>
       </div>
       <div class="pr_trust_card pr_anim" style="--d:0.5s">
         <i class="fas fa-shield-halved"></i>
-        <h3>Seguridad Inquebrantable</h3>
-        <p>Tu tráfico y datos están encriptados con tecnología bancaria (SSL y protección Anti-DDoS). Tu perfil siempre estará en línea.</p>
+        <h3>Privacidad y Seguridad</h3>
+        <p>Tus datos personales y de contacto se guardan de forma encriptada y privada para mayor tranquilidad.</p>
       </div>
     </div>
   </div>

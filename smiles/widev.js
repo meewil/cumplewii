@@ -834,3 +834,24 @@ export function wiRateLimit(key, max = 5, hasta = 'dia') {
     reset: () => { if (typeof localStorage !== 'undefined') localStorage.removeItem(K); }
   };
 }
+
+// SUPERFUN — Ejecución diferida en interacción (una vez por sesión/navegador)
+export const superFun = (() => {
+  let c = false;
+  try { c = localStorage.getItem('superFun') === 'true'; } catch {}
+  const run = (fn) => {
+    try { fn(); } catch(e) { console.error('superFun:', e); }
+    try { localStorage.setItem('superFun', 'true'); } catch {}
+  };
+  return (fn) => {
+    if (c) {
+      run(fn);
+    } else {
+      const trigger = () => {
+        run(fn);
+        ['touchstart', 'scroll', 'click', 'mousemove'].forEach(ev => document.removeEventListener(ev, trigger));
+      };
+      ['touchstart', 'scroll', 'click', 'mousemove'].forEach(ev => document.addEventListener(ev, trigger, { once: true }));
+    }
+  };
+})();

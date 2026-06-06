@@ -4,13 +4,12 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfi
          sendEmailVerification, sendPasswordResetEmail, signOut, GoogleAuthProvider, signInWithPopup, deleteUser } from 'firebase/auth';
 import { setDoc, getDoc, getDocs, doc, collection, query, where, serverTimestamp, limit, writeBatch } from 'firebase/firestore';
 import { wiTip, Mensaje, savels, getls, wiSpin, wiAuth, abrirModal, cerrarTodos, wiRateLimit } from '../widev.js';
-import { rutas } from '../rutas.js';
-import { app } from '../wii.js';
+import { rutas, rolPage } from '../rutas.js';
+import { app, linkweb } from '../wii.js';
 
 // ── CONFIG ───────────────────────────────────────────────────────────────────
 let rolPublico = 'usuario';
-let avatarMain = '/smile.avif';
-const ROL_PATH = { usuario: '/registrar', editor: '/nuevo', gestor: '/gestor', admin: '/admin' };
+let avatarMain = linkweb+'/smile.avif';
 let _googleUser = null; // Variable privada para almacenar sesión temporal de Google SSO
 
 const err = {
@@ -130,7 +129,7 @@ export const render = () => `<div class="wilg_wrap"><div class="wilg_card"><form
 
 export const init = () => {
   const wi = wiAuth.user;
-  if (wi) return setTimeout(() => rutas.navigate(ROL_PATH[wi.rol] || '/'), 0);
+  if (wi) return setTimeout(() => rutas.navigate(rolPage[wi.rol] || '/'), 0);
   mostrar('login');
 };
 
@@ -164,7 +163,7 @@ const entrar = wi => {
       .then(() => auth.currentUser.getIdToken(true))
       .catch(console.error);
   }
-  setTimeout(() => { rutas.navigate(ROL_PATH[wi?.rol] || '/'); }, 1000);
+  setTimeout(() => { rutas.navigate(rolPage[wi?.rol] || '/'); }, 1000);
 };
 
 const accion = async (btn, txt, fn) => {

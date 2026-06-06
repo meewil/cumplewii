@@ -3,20 +3,20 @@ import { app, titulo, descri, keywii, linkweb } from './wii.js';
 import { Notificacion, wiPath, wiFade } from './widev.js';
 import * as inicioMod from './todos/inicio.js';
 
+export const rolPage = { usuario: '/smile', editor: '/editor', gestor: '/gestor', admin: '/admin' };
+
 // ── NAV COMUN — rutas compartidas entre todos los roles ────────────────────────
 const COMUN = [
-  // { href: '/acerca', page: 'acerca', ico: 'fa-circle-info', txt: 'Acerca' }
+  { href: '/acerca', ico: 'fa-circle-info', txt: 'Acerca' }
 ];
 
 // ── NAV — Config visual por rol (nvleft = izquierda, nvright = derecha) ────────
 export const NAV = {
   todos: {
     nvleft:  [
-      { href: '/', page: 'inicio', ico: 'fa-house', txt: 'Bienvenido' },
-      { href: '/descubre', page: 'descubre', ico: 'fa-compass', txt: 'Descubre' },
-      { href: '/privacidad', page: 'privacidad', ico: 'fa-user-shield', txt: 'Privacidad' },
-      { href: '/terminos', page: 'terminos', ico: 'fa-file-contract', txt: 'Términos' },
-      { href: '/acerca', page: 'acerca', ico: 'fa-circle-info', txt: 'Acerca' },
+      { href: '/', ico: 'fa-house', txt: 'Bienvenido' },
+      { href: '/cumples', ico: 'fa-cake-candles', txt: 'Cumples' },
+      { href: '/meses', ico: 'fa-calendar-days', txt: 'Meses' },
        ...COMUN],
     nvright: [
       { isBtn: true, cls: 'bt_auth registrar', ico: 'fa-user-plus', txt: 'Registrar' },
@@ -25,58 +25,62 @@ export const NAV = {
   },
   usuario: {
     nvleft: [
-      { href: '/registrar', page: 'registrar', ico: 'fa-plus-circle',      txt: 'Registrar Ventas' },
-      { href: '/historial', page: 'historial', ico: 'fa-clipboard-list',   txt: 'Historial Ventas' },
-      { href: '/ranking',   page: 'ranking',   ico: 'fa-trophy',           txt: 'Ranking'   },
-      { href: '/tours',     page: 'tours',     ico: 'fa-route',            txt: 'Tours '     },
-      { href: '/chat', page: 'chat', ico: 'fa-comments', txt: 'Chat Grupal' },
+      { href: '/smile',     ico: 'fa-house',            txt: 'Dashboard' },
+      { href: '/cumples',   ico: 'fa-cake-candles',     txt: 'Cumples' },
+      { href: '/meses',     ico: 'fa-calendar-days',    txt: 'Meses' },
+      { href: '/musica',    ico: 'fa-headphones',       txt: 'Música' },
+      { href: '/word',      ico: 'fa-file-word',        txt: 'Tareas' },
       ...COMUN,
     ],
     nvright: [
+      { href: '/descubre', ico: 'fa-compass', txt: 'Descubre' },
       { isPerfil: true }, { isSalir: true },
     ],
   },
   editor: {
     nvleft: [
-      { href: '/blog',      page: 'blog',      ico: 'fa-newspaper',        txt: 'Blog' },
-      { href: '/nuevo',     page: 'nuevo',     ico: 'fa-plus-circle',      txt: 'Crear Post' },
-      { href: '/notas',     page: 'notas',     ico: 'fa-book-open',        txt: 'Book' },
-      { href: '/chat',      page: 'chat',      ico: 'fa-comments',         txt: 'Chat Grupal' },
+      { href: '/editor',    ico: 'fa-house',            txt: 'Dashboard' },
+      { href: '/blog',      ico: 'fa-newspaper',        txt: 'Blog' },
+      { href: '/cumples',   ico: 'fa-cake-candles',     txt: 'Cumples' },
+      { href: '/meses',     ico: 'fa-calendar-days',    txt: 'Meses' },
+      { href: '/musica',    ico: 'fa-headphones',       txt: 'Música' },
+      { href: '/notas',     ico: 'fa-book-open',        txt: 'Notas' },
       ...COMUN,
     ],
     nvright: [
+      { href: '/nuevo',     ico: 'fa-plus-circle',      txt: 'Crear Post' },
+      { href: '/chat',      ico: 'fa-comments',         txt: 'Chat Grupal' },
       { isPerfil: true }, { isSalir: true },
     ],
   },
   gestor: {
     nvleft: [
-      { href: '/gestor',     page: 'gestor',     ico: 'fa-house',           txt: 'Dashboard'    },
-      { href: '/registrar', page: 'registrar', ico: 'fa-plus-circle',      txt: 'Registrar Ventas' },
-      { href: '/ranking',   page: 'ranking',   ico: 'fa-trophy',           txt: 'Ranking'   },
-      { href: '/historial', page: 'historial', ico: 'fa-clipboard-list',   txt: 'Tablero' },
-      { href: '/tours',     page: 'tours',     ico: 'fa-route',            txt: 'Tours'     },
-      { href: '/chat', page: 'chat', ico: 'fa-comments', txt: 'Chat Grupal' },
+      { href: '/gestor',     ico: 'fa-house',           txt: 'Dashboard'    },
+      { href: '/cumples',    ico: 'fa-cake-candles',    txt: 'Cumples' },
+      { href: '/meses',      ico: 'fa-calendar-days',   txt: 'Meses' },
+      { href: '/musica',     ico: 'fa-headphones',      txt: 'Música' },
       ...COMUN,
     ],
     nvright: [
-      { href: '/rrhh',      page: 'rrhh',      ico: 'fa-users-gear',     txt: 'RRHH'      },
-      { href: '/precios',   page: 'precios',   ico: 'fa-tags',           txt: 'Precios'   },
+      { href: '/precios',   ico: 'fa-tags',           txt: 'Precios'   },
+      { href: '/chat',       ico: 'fa-comments',        txt: 'Chat Grupal'  },
       { isPerfil: true }, { isSalir: true },
     ],
   },
   admin: {
     nvleft: [
-      { href: '/admin',    page: 'admin',    ico: 'fa-globe', txt: 'Plataforma' },
-      { href: '/usuarios', page: 'usuarios', ico: 'fa-users', txt: 'Usuarios'   },
-      { href: '/permisos', page: 'permisos', ico: 'fa-lock',  txt: 'Permisos'   },
-      { href: '/sistema',  page: 'sistema',  ico: 'fa-cogs',  txt: 'Sistema'    },
-      { href: '/chat', page: 'chat', ico: 'fa-comments', txt: 'Chat Grupal' },
+      { href: '/admin',    ico: 'fa-globe', txt: 'Plataforma' },
+      { href: '/usuarios', ico: 'fa-users', txt: 'Usuarios'   },
+      { href: '/cumples',  ico: 'fa-cake-candles', txt: 'Cumples' },
+      { href: '/meses',    ico: 'fa-calendar-days', txt: 'Meses' },
+      { href: '/musica',   ico: 'fa-headphones',   txt: 'Música' },
+      { href: '/chat',     ico: 'fa-comments', txt: 'Chat Grupal' },
+      ...COMUN,
     ],
     nvright: [
-      { href: '/mifcm',    page: 'mifcm',    ico: 'fa-bell',  txt: 'Mi FCM'     },
-      { href: '/word',      page: 'word',      ico: 'fa-rocket', txt: 'Planificar'     },
-      { href: '/nuevo',    page: 'nuevo',    ico: 'fa-plus',        txt: 'Post' },
-      { href: '/notas', page: 'notas', ico: 'fa-comments',    txt: 'Book'   },
+      { href: '/word',      ico: 'fa-rocket', txt: 'Planificar'     },
+      { href: '/nuevo',    ico: 'fa-plus',        txt: 'Post' },
+      { href: '/notas',    ico: 'fa-comments',    txt: 'Book'   },
       { isPerfil: true }, { isSalir: true },
     ],
   },
@@ -92,11 +96,13 @@ export const RUTAS = [
   { path: '/inicio',   area: 'todos/' },
   { path: '/login',    area: 'todos/' },
   { path: '/emojis',   area: 'todos/' },
-  { path: '/registrado',   area: 'todos/' },
+  { path: '/registrado',   area: 'editor/' },
+  { path: '/cumples',  area: 'todos/' },
+  { path: '/meses',    area: 'todos/' },
 
   // ── Submódulos públicos ───────────────────────────────────────────────
-  { path: '/blog',     area: 'todos/blog/' },
-  { path: '/post',     area: 'todos/blog/'    }, 
+  { path: '/blog',     area: 'editor/blog/' },
+  { path: '/post',     area: 'editor/blog/'    }, 
   { path: '/chatwil',  area: 'todos/chatwil/' },
 
   // ── Acerca / Legales / Info ───────────────────────────────────────────────
@@ -108,45 +114,37 @@ export const RUTAS = [
   { path: '/feedback',   area: 'todos/acerca/' },
   { path: '/contacto',   area: 'todos/acerca/' },
 
-  // ── Autenticadas (smile) ───────────────────────────────────────────────
-  { path: '/agregar',  area: 'smile/', roles: ['usuario','editor','gestor','admin'] },
-  { path: '/smile',    area: 'smile/', roles: ['usuario','editor','gestor','admin'] },
-  { path: '/notas',    area: 'smile/', roles: ['usuario','editor','gestor','admin'] },
-  { path: '/perfil',   area: 'smile/', roles: ['usuario','editor','gestor','admin'] },
-  { path: '/mensajes', area: 'smile/', roles: ['usuario','editor','gestor','admin'] },
-  { path: '/word',     area: 'smile/', roles: ['usuario','editor','gestor','admin'] },
-  { path: '/nuevo',    area: 'todos/blog/', roles: ['editor','gestor','admin'] },
+  // ── Autenticadas (usuario/editor/gestor/admin) ───────────────────────────────────────────────
+  { path: '/smile',    area: 'usuario/', roles: ['usuario','editor','gestor','admin'] },
+  { path: '/notas',    area: 'usuario/', roles: ['usuario','editor','gestor','admin'] },
+  { path: '/perfil',   area: 'usuario/', roles: ['usuario','editor','gestor','admin'] },
+  { path: '/mensajes', area: 'usuario/', roles: ['usuario','editor','gestor','admin'] },
+  { path: '/word',     area: 'usuario/', roles: ['usuario','editor','gestor','admin'] },
+  { path: '/win',      area: 'usuario/', roles: ['usuario','editor','gestor','admin'] },
+  { path: '/musica',   area: 'usuario/', roles: ['usuario','editor','gestor','admin'] },
+  { path: '/chat',     area: 'editor/', roles: ['editor','gestor','admin'] },
+  { path: '/editor',   area: 'editor/', roles: ['editor','gestor','admin'] },
+  { path: '/nuevo',    area: 'editor/blog/', roles: ['editor','gestor','admin'] },
 
-  // ── Tours App — smile ────────────────────────────────────────────────
-  { path: '/registrar', area: 'smile/', roles: ['usuario','editor','gestor','admin'] },
-  { path: '/ranking',   area: 'smile/', roles: ['usuario','editor','gestor','admin'] },
-  { path: '/historial', area: 'smile/', roles: ['usuario','editor','gestor','admin'] },
-  { path: '/tours',     area: 'smile/', roles: ['usuario','editor','gestor','admin'] },
-  { path: '/avisar',    area: 'smile/', roles: ['usuario','editor','gestor','admin'] },
-  { path: '/chat',      area: 'smile/', roles: ['usuario','editor','gestor','admin'] },
-  // ── Tours App — gestor ────────────────────────────────────────────────
-  { path: '/rrhh',      area: 'gestor/', roles: ['gestor','admin'] },
-  { path: '/precios',   area: 'gestor/', roles: ['gestor','admin'] },
+  // ── Precios ────────────────────────────────────────────────
+  { path: '/precios',   area: 'todos/', roles: ['gestor','admin'] },
 
   // ── Autenticadas (roles superiores) ───────────────────────────────────────────────
   { path: '/gestor',   area: 'gestor/',  roles: ['gestor','admin'] },
   { path: '/admin',    area: 'admin/',   roles: ['admin']          },
   { path: '/usuarios', area: 'admin/',   roles: ['admin']          },
-  { path: '/permisos', area: 'admin/',   roles: ['admin']          },
-  { path: '/sistema',  area: 'admin/',   roles: ['admin']          },
-  { path: '/mifcm',    area: 'admin/',   roles: ['admin']          },
-  { path: '/verificar',area: 'verificar/',roles: ['admin']          },
+  { path: '/verificar',area: 'admin/verificar/', roles: ['admin']   },
 ];
 
 // ── GLOB — Vite mapea todos los módulos en build time ───────────────────────────────────────────────
 const MODS = import.meta.glob([
-  './{todos,smile,gestor,admin,verificar}/**/*.js',
+  './{todos,usuario,editor,gestor,admin}/**/*.js',
   '!./todos/inicio.js',
   '!./todos/chatwil/head/**/*.js',
   '!./todos/chatwil/memoria.js',
   '!./todos/chatwil/brain.js',
-  '!./todos/blog/devblog.js',
-  '!./todos/blog/wiad.js'
+  '!./editor/blog/devblog.js',
+  '!./editor/blog/wiad.js'
 ]);
 const rutasMod = (area, page) => MODS[`./${area}${page}.js`];
 
@@ -213,7 +211,7 @@ class WiRutas {
     const norm = wiPath.limpiar(ruta) === '/' ? `/${this.HOME}` : wiPath.limpiar(ruta);
 
     // ── GUARD ADMIN ───────────────────────────────────────────────────────────
-    if (['/admin','/usuarios','/permisos','/sistema','/mifcm'].includes(norm)) {
+    if (['/admin', '/usuarios'].includes(norm)) {
       const { getls } = await import('./widev.js');
       const wi = getls('wiSmile'), go = r => (this.cargand = false, this.navigate(r, true));
       const dest = !wi || wi.rol !== 'admin' ? '/' : wi.estado !== 'activo' ? '/registrado' : !sessionStorage.getItem('vault_unlocked') ? '/verificar' : null;
@@ -223,7 +221,7 @@ class WiRutas {
     try {
       this.modActual?.cleanup?.();
       const slug = !this.rutas[norm] ? norm.slice(1) : null;
-      const cargar  = slug ? rutasMod('web/blog/', 'post') : (this.rutas[norm] ?? rutasMod('web/', '404'));
+      const cargar  = slug ? rutasMod('editor/blog/', 'post') : (this.rutas[norm] ?? rutasMod('todos/', '404'));
       const mod = this.cache[norm] ?? await cargar();
       if (!slug) this.cache[norm] = mod;
 
