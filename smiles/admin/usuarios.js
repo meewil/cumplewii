@@ -39,6 +39,7 @@ export const render = () => {
     <div class="adu_controls">
       <div class="adu_filters" id="adu_filters">
         <button class="adu_filter_btn active" data-rol="todos">Todos</button>
+        <button class="adu_filter_btn" data-rol="usuario">Usuarios</button>
         <button class="adu_filter_btn" data-rol="smile">Smiles</button>
         <button class="adu_filter_btn" data-rol="gestor">Gestores</button>
         <button class="adu_filter_btn" data-rol="empresa">Empresas</button>
@@ -151,7 +152,7 @@ function _renderTabla() {
   
   const filtrados = _usuarios.filter(u => {
     // Filtro por Rol
-    if (_filtro !== 'todos' && (u.rol || 'smile') !== _filtro) return false;
+    if (_filtro !== 'todos' && (u.rol || 'usuario') !== _filtro) return false;
     // Filtro por Texto (email, id, nombre)
     if (txt) {
       const match = [u.id, u.email, u.nombre, u.nombres, u.apellidos].join(' ').toLowerCase();
@@ -169,7 +170,7 @@ function _renderTabla() {
     const nom = u.nombres || u.nombre || u.id;
     const em  = u.email || '—';
     const av  = avatar(nom);
-    const rol = u.rol || 'smile';
+    const rol = u.rol || 'usuario';
     const fDate = u.fecha?.toDate ? formatearFechaHora(u.fecha) : '—';
     const dep = u.empresa || u.empresa_id || u.gestor || u.gestor_id || 'Independiente';
 
@@ -232,7 +233,7 @@ function _modalInfo(u) {
           <div style="display:flex;gap:2vh">
             <div class="adu_field" style="flex:1">
               <label>Rol de Acceso</label>
-              <input type="text" class="adu_input" value="${u.rol || 'smile'}" style="text-transform:uppercase;font-weight:bold" disabled>
+              <input type="text" class="adu_input" value="${u.rol || 'usuario'}" style="text-transform:uppercase;font-weight:bold" disabled>
             </div>
             <div class="adu_field" style="flex:1">
               <label>Fecha de Registro</label>

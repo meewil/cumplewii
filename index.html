@@ -43,7 +43,7 @@
       --fz_x3: clamp(2.9rem, 5vh, 3.9rem);
       --fz_x4: clamp(3.3rem, 5.9vh, 4.3rem);
       --fz_y1: clamp(3rem, 14vh, 8rem);
-      --bs_m: 0 0 0.3vh 0.1vh var(--F);
+      --bs_m: 0 0 0.3vh 0.1vh var(--white);
       --bs_l: 0 0.4vh 0.8vh rgba(0, 0, 0, 0.15);
       --tr_s: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
       --tr_m: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -53,16 +53,13 @@
       --ff_R: 'Rubik', 'Segoe UI', system-ui;
       --gradient-dia: linear-gradient(135deg, #0EBEFF 0%, #29C72E 100%);
       --gradient-noche: linear-gradient(135deg, #21273B 0%, #7000FF 100%);
-      --F: #fff;
-      --0: #000;
-      --D: #ddd;
-      --G: #374151;
 
       --success: #3cd741;
       --error: #ff3849;
       --warning: #ffa726;
       --info: #00a8e6;
 
+      --white: #fff;
       --offline: #ddd;
       --Cielo: #0EBEFF;
       --Dulce: #FF5C69;
@@ -70,14 +67,6 @@
       --Oro: #FFDA34;
       --Mora: #7000FF;
       --Futuro: #21273B;
-      /* SmileBeneficios */
-      --sm_azul: #37a1dd;
-      --sm_amarillo: #FFD101;
-      --sm_rojo: #fe413b;
-      --sm_azul_d: #1d7fb8;
-      --sm_azul_l: #d0ecf9;
-      --sm_grad: linear-gradient(135deg, #37a1dd 0%, #1d7fb8 100%);
-      --sm_grad_y: linear-gradient(135deg, #FFD101 0%, #f5a623 100%);
     }
 
     :root[data-theme="Cielo"] {
@@ -103,6 +92,7 @@
       --bg6: rgba(204, 239, 255, 0.5);
       --bg7: #FFF;
       --bg8: #FFF;
+      --bt: #1978d7;
     }
 
     :root[data-theme="Dulce"] {
@@ -128,6 +118,7 @@
       --bg6: rgba(255, 204, 209, 0.5);
       --bg7: #FFF;
       --bg8: #FFF;
+      --bt: #ff3849;
     }
 
     :root[data-theme="Paz"] {
@@ -153,6 +144,7 @@
       --bg6: rgba(204, 255, 206, 0.5);
       --bg7: #FFF;
       --bg8: #FFF;
+      --bt: #25b62a;
     }
 
     :root[data-theme="Oro"] {
@@ -166,7 +158,7 @@
       --txe: #000;
       --hv: #f0cc00;
       --hva: #c9a800;
-      --mco: #FFDA34;
+      --mco: #F5AF00;
       --mbg: #facc00;
       --brd: #ffe066;
       --inp: #fffef5;
@@ -178,6 +170,7 @@
       --bg6: rgba(255, 243, 176, 0.5);
       --bg7: #FFF;
       --bg8: #FFF;
+      --bt: #FFDA34;
     }
 
     :root[data-theme="Mora"] {
@@ -203,6 +196,7 @@
       --bg6: rgba(228, 204, 255, 0.5);
       --bg7: #FFF;
       --bg8: #FFF;
+      --bt: #6a00f5;
     }
 
     :root[data-theme="Futuro"] {
@@ -228,6 +222,7 @@
       --bg6: rgba(26, 34, 53, 0.7);
       --bg7: #00f3ff;
       --bg8: #1a2235;
+      --bt: #00f3ff;
     }
 
     *,
@@ -483,7 +478,7 @@
     }
 
     .tema.mtha {
-      border-color: var(--F);
+      border-color: var(--white);
       box-shadow: 0 0 1.5vh rgba(255, 255, 255, 0.6), inset 0 0 0.5vh rgba(255, 255, 255, 0.3);
       transform: scale(1.01)
     }
@@ -559,7 +554,7 @@
     }
 
     .wilogo a {
-      color: var(--bg2)
+      color: var(--mco)
     }
 
     .wilogo i {
@@ -1214,7 +1209,7 @@
       }
     }
   </style>
-  <style>@import url('./smiles/web/inicio.css');</style>
+  <style>@import url('./smiles/todos/inicio.css');</style>
 </head>
 
 <body>

@@ -1,4 +1,3 @@
-import $ from 'jquery';
 import { getls, wiSmart } from './widev.js';
 import { rutas } from './rutas.js';
 
@@ -7,7 +6,7 @@ rutas.registerAll(() => getls('wiSmile')?.rol);
 
 rutas.register('/', (isPre = false) => {
   const u = getls('wiSmile');
-  if (u && !isPre) setTimeout(() => rutas.navigate(({smile:'/smile',gestor:'/gestor',admin:'/admin'})[u.rol]||'/smile'), 0);
+  if (u && !isPre) setTimeout(() => rutas.navigate(({usuario: '/smile', editor: '/nuevo', gestor: '/gestor', admin: '/admin'})[u.rol]||'/smile'), 0);
   return rutas.inicio();
 });
 rutas.init();
@@ -21,4 +20,3 @@ css: [
   'https://fonts.googleapis.com/css2?family=Rubik:wght@300..900&display=swap',
 ],
 });
-

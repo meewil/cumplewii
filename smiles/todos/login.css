@@ -45,14 +45,14 @@
 
 /* HEAD */
 .wilg_head { display: flex; flex-direction: column; align-items: center; gap: .7vh;  }
-.wilg_head h2 { font-family: var(--ff_G); font-size: var(--fz_l2); font-weight: 700; color: var(--mco); letter-spacing: -.03em; margin: 0; }
+.wilg_head h2 { font-family: var(--ff_P); font-size: var(--fz_l2); font-weight: 700; color: var(--mco); letter-spacing: -.03em; margin: 0; }
 .wilg_head p  { font-size: var(--fz_m1); color: var(--tx3); margin: 0; opacity: .85; }
 
 /* LOGO */
 .wilg_logo {
   width: 8.5vh; height: 8.5vh;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--mco), var(--hva));
+  background: linear-gradient(135deg, var(--mco), var(--hva, var(--hv)));
   display: flex; align-items: center; justify-content: center;
   box-shadow: 0 1.5vh 4vh var(--bg5), 0 0 0 4px var(--bg4);
   animation: liFloat 3.5s ease-in-out infinite;
@@ -94,7 +94,7 @@
   color: var(--mco); opacity: .6; font-size: var(--fz_m2);
   pointer-events: none; transition: all var(--tr_f); z-index: 2;
 }
-.wilg_grupo:focus-within > i:first-of-type { opacity: 1; color: var(--hva); transform: translateY(-50%) scale(1.15); }
+.wilg_grupo:focus-within > i:first-of-type { opacity: 1; color: var(--hva, var(--hv)); transform: translateY(-50%) scale(1.15); }
 
 .wilg_grupo input {
   width: 100%;
@@ -128,12 +128,12 @@
 .wilg_check label:hover { color: var(--mco); }
 .wilg_check input[type="checkbox"] { width: 1.8vh; height: 1.8vh; padding: 0; accent-color: var(--mco); flex-shrink: 0; }
 .wilg_check a { color: var(--mco); text-decoration: underline; font-weight: 500; transition: color var(--tr_f); }
-.wilg_check a:hover { color: var(--hva); }
+.wilg_check a:hover { color: var(--hva, var(--hv)); }
 
 /* BOTÓN */
 .wilg_btn {
   width: 100%; padding: 1.55vh 2vw;
-  background: linear-gradient(135deg, var(--mco) 0%, var(--hva) 100%);
+  background: linear-gradient(135deg, var(--mco) 0%, var(--hva, var(--hv)) 100%);
   color: var(--txa); border: none; border-radius: 1.1vh;
   font-size: var(--fz_m3); font-weight: 600; font-family: var(--ff_P);
   cursor: pointer; letter-spacing: .02em;
@@ -157,172 +157,9 @@
   user-select: none;
 }
 .wilg_links span::after { content:''; position:absolute; bottom:.2vh; left:50%; width:0; height:2px; background:var(--mco); transform:translateX(-50%); transition:width var(--tr_f); border-radius:1px; }
-.wilg_links span:hover  { color: var(--hva); background: var(--bg4); transform: translateY(-.2vh); }
+.wilg_links span:hover  { color: var(--hva, var(--hv)); background: var(--bg4); transform: translateY(-.2vh); }
 .wilg_links span:hover::after { width: 75%; }
 .wilg_rec i { margin-right: .3vh; font-size: var(--fz_s4); }
-
-/* ==================== SELECTOR DE ROL ==================== */
-.wilg_rol_selector {
-  display: flex;
-  flex-direction: column;
-  gap: .8vh;
-  animation: liFadeUp .3s ease backwards;
-}
-
-.wilg_rol_label {
-  font-size: var(--fz_m1);
-  font-weight: 600;
-  color: var(--tx2);
-  display: flex;
-  align-items: center;
-  gap: .5vh;
-}
-.wilg_rol_label i { color: var(--mco); opacity: .8; }
-
-.wilg_rol_tabs {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: .6vh;
-  background: var(--inp);
-  border: 1px solid var(--brd);
-  border-radius: 1.1vh;
-  padding: .4vh;
-}
-
-.wilg_rol_tab {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: .4vh;
-  padding: 1.1vh .5vw;
-  background: transparent;
-  border: 2px solid transparent;
-  border-radius: .8vh;
-  color: var(--tx3);
-  font-size: var(--fz_s4);
-  font-weight: 500;
-  font-family: var(--ff_P);
-  cursor: pointer;
-  transition: all var(--tr_f);
-}
-.wilg_rol_tab i   { font-size: var(--fz_m2); transition: all var(--tr_f); }
-.wilg_rol_tab span { font-size: var(--fz_s4); }
-
-.wilg_rol_tab:hover {
-  color: var(--mco);
-  background: var(--bg4);
-  border-color: color-mix(in srgb, var(--mco) 20%, transparent);
-}
-
-.wilg_rol_tab.active {
-  background: var(--wb);
-  border-color: var(--mco);
-  color: var(--mco);
-  box-shadow: 0 .3vh 1.2vh var(--bg5);
-}
-.wilg_rol_tab.active i { transform: scale(1.15); }
-
-/* ==================== EXTRA CONDICIONAL ==================== */
-.wilg_rol_extra {
-  display: flex;
-  flex-direction: column;
-  gap: .8vh;
-  animation: liFadeUp .25s ease backwards;
-}
-
-.wilg_extra_label {
-  font-size: var(--fz_m1);
-  font-weight: 600;
-  color: var(--tx2);
-  display: flex;
-  align-items: center;
-  gap: .5vh;
-}
-.wilg_extra_label i { color: var(--mco); opacity: .8; }
-
-.wilg_extra_opts {
-  display: flex;
-  gap: .7vh;
-}
-
-.wilg_extra_opt {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: .5vh;
-  padding: .9vh 1vw;
-  background: var(--inp);
-  border: 2px solid var(--brd);
-  border-radius: .8vh;
-  color: var(--tx3);
-  font-size: var(--fz_m1);
-  font-weight: 500;
-  cursor: pointer;
-  transition: all var(--tr_f);
-  user-select: none;
-}
-.wilg_extra_opt input[type="radio"] { display: none; }
-.wilg_extra_opt i { font-size: var(--fz_m2); transition: all var(--tr_f); }
-
-.wilg_extra_opt:hover {
-  border-color: var(--mco);
-  color: var(--mco);
-  background: color-mix(in srgb, var(--mco) 6%, var(--inp));
-}
-.wilg_extra_opt.active {
-  border-color: var(--mco);
-  background: color-mix(in srgb, var(--mco) 10%, var(--inp));
-  color: var(--mco);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--mco) 15%, transparent);
-}
-.wilg_extra_opt.active i { transform: scale(1.1); }
-
-.wilg_extra_field {
-  display: flex;
-  flex-direction: column;
-  gap: .8vh;
-  overflow: hidden;
-  transition: all var(--tr_f);
-}
-.wilg_extra_field.wilg_extra_2col {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: .8vh 1vw;
-}
-.wilg_extra_field.hidden {
-  max-height: 0;
-  opacity: 0;
-  pointer-events: none;
-  margin: 0;
-  padding: 0;
-}
-.wilg_extra_field:not(.hidden) {
-  max-height: 24vh;
-  opacity: 1;
-  animation: liFadeUp .25s ease backwards;
-}
-
-/* INFO BADGE — aviso de cuenta pendiente */
-.wilg_info_badge {
-  display: flex;
-  align-items: flex-start;
-  gap: .6vh;
-  padding: .9vh 1.2vh;
-  border-radius: .8vh;
-  font-size: var(--fz_s4);
-  line-height: 1.4;
-}
-.wilg_info_badge i { margin-top: .15vh; flex-shrink: 0; }
-
-.wilg_badge_smile { background: rgba(14,190,255,0.1); color: #0EBEFF; border: 1px solid rgba(14,190,255,0.2); }
-.wilg_badge_smile i { color: #0EBEFF; }
-
-.wilg_badge_gestor { background: rgba(41,199,46,0.1); color: #29C72E; border: 1px solid rgba(41,199,46,0.2); }
-.wilg_badge_gestor i { color: #29C72E; }
-
-.wilg_badge_empresa { background: rgba(255,184,0,0.1); color: #FFB800; border: 1px solid rgba(255,184,0,0.2); }
-.wilg_badge_empresa i { color: #FFB800; }
 
 /* GOOGLE AUTH */
 .wilg_btn_google {
@@ -333,7 +170,7 @@
   box-shadow: 0 .4vh 1vh rgba(0,0,0,.05); transition: all var(--tr_f);
 }
 .wilg_btn_google img { width: 2.2vh; height: 2.2vh; }
-.wilg_btn_google:hover { transform: translateY(-.2vh); box-shadow: 0 .8vh 2vh rgba(0,0,0,.08); border-color: var(--brd2); }
+.wilg_btn_google:hover { transform: translateY(-.2vh); box-shadow: 0 .8vh 2vh rgba(0,0,0,.08); border-color: var(--brd); }
 
 .wilg_or {
   display: flex; align-items: center; text-align: center; color: var(--tx3); font-size: var(--fz_s4); margin: .5vh 0;
@@ -358,6 +195,8 @@
   font-size: var(--fz_m3); cursor: pointer;
   transition: all var(--tr_f);
   display: flex; align-items: center; justify-content: center; z-index: 10;
+  padding: 0;
+  line-height: 1;
 }
 .wilg_mod .modalX:hover { background: var(--mco); color: var(--txa); transform: rotate(90deg) scale(1.1); }
 
@@ -385,9 +224,6 @@
   .wilg_mod .modalBody { max-width: 95vw; min-width: auto; }
   .wilg_mod_reg .modalBody { max-width: 95vw; }
   .wilg_mod #liForm { padding: 3vh 4vw; }
-  .wilg_rol_tab span { display: none; }
-  .wilg_rol_tab { padding: 1.2vh; }
-  .wilg_extra_opts { flex-direction: column; }
 }
 
 @media (max-width: 480px) {

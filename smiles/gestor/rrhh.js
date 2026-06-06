@@ -29,11 +29,11 @@ const _avatar = (u, size = 40) => {
     return `<div class="rrhh_avatar" style="width:${size}px;height:${size}px"><img src="${u.imagen}" alt="${Capi(u.nombre || u.usuario || '?')}" loading="lazy"/></div>`;
   }
   const ini = _initials(u);
-  return `<div class="rrhh_avatar rrhh_avatar_initials" data-rol="${u.rol || 'smile'}" style="width:${size}px;height:${size}px;font-size:${Math.round(size * 0.36)}px">${ini}</div>`;
+  return `<div class="rrhh_avatar rrhh_avatar_initials" data-rol="${u.rol || 'usuario'}" style="width:${size}px;height:${size}px;font-size:${Math.round(size * 0.36)}px">${ini}</div>`;
 };
 
 const _rolBadge = (rol) => {
-  const safe = (rol || 'smile').toLowerCase();
+  const safe = (rol || 'usuario').toLowerCase();
   return `<span class="rrhh_rol_badge rrhh_rol_${safe}">${Capi(safe)}</span>`;
 };
 
@@ -60,7 +60,7 @@ const _toggleHtml = (id, participa) => {
 // ─── Filter logic ─────────────────────────────────────────────────────────────
 const _applyFilters = () => {
   const term = filtroSearch.toLowerCase().trim();
-  const miRol = getls('wiSmile')?.rol || 'smile';
+  const miRol = getls('wiSmile')?.rol || 'usuario';
 
   return usuarios.filter(u => {
     // Seguridad: Si soy gestor, no veo admins
@@ -230,7 +230,8 @@ export const render = () => /* html */`
           <div class="rrhh_form_row">
             <label class="rrhh_form_label" for="edit_rol">Rol</label>
             <select class="rrhh_form_select" id="edit_rol">
-              <option value="smile">Smile</option>
+              <option value="usuario">Usuario</option>
+              <option value="editor">Editor</option>
               <option value="gestor">Gestor</option>
               <option value="admin">Admin</option>
             </select>
@@ -380,7 +381,7 @@ const _openPanel = (id) => {
   $('#edit_email').val(u.email || '');
   $('#edit_descripcion').val(u.descripcion || '');
   $('#edit_imagen').val(u.imagen || '');
-  $('#edit_rol').val(u.rol || 'smile');
+  $('#edit_rol').val(u.rol || 'usuario');
   $('#edit_estado').val(u.estado || 'activo');
   $('#edit_participa').prop('checked', u.participa === 'si');
   $('#edit_banco').val(u.banco || '');
@@ -388,7 +389,7 @@ const _openPanel = (id) => {
   $('#edit_titularCuenta').val(u.titularCuenta || '');
 
   // Security options
-  const miRol = getls('wiSmile')?.rol || 'smile';
+  const miRol = getls('wiSmile')?.rol || 'usuario';
   if (miRol === 'gestor') {
     $('#edit_rol option[value="admin"]').hide();
   } else {

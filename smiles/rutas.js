@@ -1,7 +1,7 @@
 import $ from 'jquery';
 import { app, titulo, descri, keywii, linkweb } from './wii.js';
 import { Notificacion, wiPath, wiFade } from './widev.js';
-import * as inicioMod from './web/inicio.js';
+import * as inicioMod from './todos/inicio.js';
 
 // ── NAV COMUN — rutas compartidas entre todos los roles ────────────────────────
 const COMUN = [
@@ -18,15 +18,30 @@ export const NAV = {
       { href: '/terminos', page: 'terminos', ico: 'fa-file-contract', txt: 'Términos' },
       { href: '/acerca', page: 'acerca', ico: 'fa-circle-info', txt: 'Acerca' },
        ...COMUN],
-    nvright: [],
+    nvright: [
+      { isBtn: true, cls: 'bt_auth registrar', ico: 'fa-user-plus', txt: 'Registrar' },
+      { isBtn: true, cls: 'bt_auth login',     ico: 'fa-sign-in-alt', txt: 'Login'  },
+    ],
   },
-  smile: {
+  usuario: {
     nvleft: [
       { href: '/registrar', page: 'registrar', ico: 'fa-plus-circle',      txt: 'Registrar Ventas' },
       { href: '/historial', page: 'historial', ico: 'fa-clipboard-list',   txt: 'Historial Ventas' },
       { href: '/ranking',   page: 'ranking',   ico: 'fa-trophy',           txt: 'Ranking'   },
       { href: '/tours',     page: 'tours',     ico: 'fa-route',            txt: 'Tours '     },
       { href: '/chat', page: 'chat', ico: 'fa-comments', txt: 'Chat Grupal' },
+      ...COMUN,
+    ],
+    nvright: [
+      { isPerfil: true }, { isSalir: true },
+    ],
+  },
+  editor: {
+    nvleft: [
+      { href: '/blog',      page: 'blog',      ico: 'fa-newspaper',        txt: 'Blog' },
+      { href: '/nuevo',     page: 'nuevo',     ico: 'fa-plus-circle',      txt: 'Crear Post' },
+      { href: '/notas',     page: 'notas',     ico: 'fa-book-open',        txt: 'Book' },
+      { href: '/chat',      page: 'chat',      ico: 'fa-comments',         txt: 'Chat Grupal' },
       ...COMUN,
     ],
     nvright: [
@@ -74,41 +89,41 @@ export const NAV = {
 // ── RUTAS — Fuente única de verdad - roles: null = público · ['rol',...] = protegido · area = carpeta del módulo ───────────────────────────────────────────────
 export const RUTAS = [
   // ── Core público ───────────────────────────────────────────────
-  { path: '/inicio',   area: 'web/' },
-  { path: '/login',    area: 'web/' },
-  { path: '/emojis',   area: 'web/' },
-  { path: '/registrado',   area: 'web/' },
+  { path: '/inicio',   area: 'todos/' },
+  { path: '/login',    area: 'todos/' },
+  { path: '/emojis',   area: 'todos/' },
+  { path: '/registrado',   area: 'todos/' },
 
   // ── Submódulos públicos ───────────────────────────────────────────────
-  { path: '/blog',     area: 'web/blog/' },
-  { path: '/post',     area: 'web/blog/'    }, 
-  { path: '/chatwil',  area: 'web/chatwil/' },
+  { path: '/blog',     area: 'todos/blog/' },
+  { path: '/post',     area: 'todos/blog/'    }, 
+  { path: '/chatwil',  area: 'todos/chatwil/' },
 
   // ── Acerca / Legales / Info ───────────────────────────────────────────────
-  { path: '/acerca',     area: 'web/acerca/' },
-  { path: '/descubre',   area: 'web/acerca/' },
-  { path: '/terminos',   area: 'web/acerca/' },
-  { path: '/cookies',    area: 'web/acerca/' },
-  { path: '/privacidad', area: 'web/acerca/' },
-  { path: '/feedback',   area: 'web/acerca/' },
-  { path: '/contacto',   area: 'web/acerca/' },
+  { path: '/acerca',     area: 'todos/acerca/' },
+  { path: '/descubre',   area: 'todos/acerca/' },
+  { path: '/terminos',   area: 'todos/acerca/' },
+  { path: '/cookies',    area: 'todos/acerca/' },
+  { path: '/privacidad', area: 'todos/acerca/' },
+  { path: '/feedback',   area: 'todos/acerca/' },
+  { path: '/contacto',   area: 'todos/acerca/' },
 
   // ── Autenticadas (smile) ───────────────────────────────────────────────
-  { path: '/agregar',  area: 'smile/', roles: ['smile','gestor','admin'] },
-  { path: '/smile',    area: 'smile/', roles: ['smile','gestor','admin'] },
-  { path: '/notas',    area: 'smile/', roles: ['smile','gestor','admin'] },
-  { path: '/perfil',   area: 'smile/', roles: ['smile','gestor','admin'] },
-  { path: '/mensajes', area: 'smile/', roles: ['smile','gestor','admin'] },
-  { path: '/word',     area: 'smile/', roles: ['smile','gestor','admin'] },
-  { path: '/nuevo',    area: 'web/blog/', roles: ['smile','gestor','admin'] },
+  { path: '/agregar',  area: 'smile/', roles: ['usuario','editor','gestor','admin'] },
+  { path: '/smile',    area: 'smile/', roles: ['usuario','editor','gestor','admin'] },
+  { path: '/notas',    area: 'smile/', roles: ['usuario','editor','gestor','admin'] },
+  { path: '/perfil',   area: 'smile/', roles: ['usuario','editor','gestor','admin'] },
+  { path: '/mensajes', area: 'smile/', roles: ['usuario','editor','gestor','admin'] },
+  { path: '/word',     area: 'smile/', roles: ['usuario','editor','gestor','admin'] },
+  { path: '/nuevo',    area: 'todos/blog/', roles: ['editor','gestor','admin'] },
 
   // ── Tours App — smile ────────────────────────────────────────────────
-  { path: '/registrar', area: 'smile/', roles: ['smile','gestor','admin'] },
-  { path: '/ranking',   area: 'smile/', roles: ['smile','gestor','admin'] },
-  { path: '/historial', area: 'smile/', roles: ['smile','gestor','admin'] },
-  { path: '/tours',     area: 'smile/', roles: ['smile','gestor','admin'] },
-  { path: '/avisar',    area: 'smile/', roles: ['smile','gestor','admin'] },
-  { path: '/chat',      area: 'smile/', roles: ['smile','gestor','admin'] },
+  { path: '/registrar', area: 'smile/', roles: ['usuario','editor','gestor','admin'] },
+  { path: '/ranking',   area: 'smile/', roles: ['usuario','editor','gestor','admin'] },
+  { path: '/historial', area: 'smile/', roles: ['usuario','editor','gestor','admin'] },
+  { path: '/tours',     area: 'smile/', roles: ['usuario','editor','gestor','admin'] },
+  { path: '/avisar',    area: 'smile/', roles: ['usuario','editor','gestor','admin'] },
+  { path: '/chat',      area: 'smile/', roles: ['usuario','editor','gestor','admin'] },
   // ── Tours App — gestor ────────────────────────────────────────────────
   { path: '/rrhh',      area: 'gestor/', roles: ['gestor','admin'] },
   { path: '/precios',   area: 'gestor/', roles: ['gestor','admin'] },
@@ -125,13 +140,13 @@ export const RUTAS = [
 
 // ── GLOB — Vite mapea todos los módulos en build time ───────────────────────────────────────────────
 const MODS = import.meta.glob([
-  './{web,smile,gestor,admin,verificar}/**/*.js',
-  '!./web/inicio.js',
-  '!./web/chatwil/head/**/*.js',
-  '!./web/chatwil/memoria.js',
-  '!./web/chatwil/brain.js',
-  '!./web/blog/devblog.js',
-  '!./web/blog/wiad.js'
+  './{todos,smile,gestor,admin,verificar}/**/*.js',
+  '!./todos/inicio.js',
+  '!./todos/chatwil/head/**/*.js',
+  '!./todos/chatwil/memoria.js',
+  '!./todos/chatwil/brain.js',
+  '!./todos/blog/devblog.js',
+  '!./todos/blog/wiad.js'
 ]);
 const rutasMod = (area, page) => MODS[`./${area}${page}.js`];
 

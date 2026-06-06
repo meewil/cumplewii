@@ -1,7 +1,6 @@
-import $ from 'jquery';
 import { app, icon } from './wii.js';
 import { rutas, NAV } from './rutas.js';
-import { Mensaje, wiAuth } from './widev.js';
+import { wiAuth } from './widev.js';
 
 // ── LOGO — generado desde wii.js ─────────────────────────────────────────────
 const LOGO = `<a href="/"><i class="fa-solid ${icon}"></i> ${app}</a>`;
@@ -43,8 +42,48 @@ if (!document.querySelector('.movil_drawer')) {
   </nav>`);
 }
 
-$(document).on('click', '.wimenu', () => $('body').addClass('movil_open'));
-$(document).on('click', '.movil_close, .movil_overlay, .movil_nav .nv_item, .movil_nav button', () => $('body').removeClass('movil_open'));
+// Event listeners using standard DOM delegation
+document.addEventListener('click', async (e) => {
+  const target = e.target;
+
+  // Toggle mobile drawer
+  if (target.closest('.wimenu')) {
+    document.body.classList.add('movil_open');
+    return;
+  }
+
+  // Close mobile drawer
+  if (target.closest('.movil_close') || target.closest('.movil_overlay') || target.closest('.movil_nav .nv_item') || target.closest('.movil_nav button')) {
+    document.body.classList.remove('movil_open');
+  }
+
+  // Salir (logout)
+  if (target.closest('.bt_salir')) {
+    const { salir } = await import('./todos/login.js');
+    salir(['wiTema', 'wiSmart']);
+    return;
+  }
+
+  // Login/Register auth buttons
+  const btAuth = target.closest('.bt_auth');
+  if (btAuth) {
+    const { abrirLogin } = await import('./todos/login.js');
+    abrirLogin(btAuth.classList.contains('registrar') ? 'registrar' : 'login');
+  }
+});
+
+// Prefetch login.js on hover
+document.addEventListener('mouseenter', (e) => {
+  if (e.target.closest?.('.bt_auth')) {
+    import('./todos/login.js');
+  }
+}, true);
+
+document.addEventListener('touchstart', (e) => {
+  if (e.target.closest?.('.bt_auth')) {
+    import('./todos/login.js');
+  }
+}, { passive: true });
 
 // ── AUTH LISTENER ─────────────────────────────────────────────────────────────
 wiAuth.on(wi => wi ? renderHeader(wi) : (renderHeader(), rutas.navigate('/')));
@@ -52,15 +91,3 @@ const wi = wiAuth.user; wi ? renderHeader(wi) : renderHeader();
 
 // ── ROUTE LISTENER — re-renderiza el nav en cada navegación SPA ───────────────
 window.addEventListener('winavigate', ({ detail: { norm } }) => renderHeader(wiAuth.user, norm));
-
-// ── EVENTOS GLOBALES ──────────────────────────────────────────────────────────
-$(document).on('click', '.bt_salir', async () => {
-  const { salir } = await import('./web/login.js');
-  salir(['wiTema', 'wiSmart']);
-});
-
-$(document).on('mouseenter touchstart', '.bt_auth', () => import('./web/login.js'));
-$(document).on('click', '.bt_auth', async function () {
-  const { abrirLogin } = await import('./web/login.js');
-  abrirLogin($(this).hasClass('registrar') ? 'registrar' : 'login');
-});

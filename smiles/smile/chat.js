@@ -76,7 +76,7 @@ export const render = () => /* html */`
             </div>
             <div class="chat_header_text">
               <h1 class="chat_title">Chat del Equipo</h1>
-              <p class="chat_subtitle">Canal interno de <em>Smiles</em></p>
+              <p class="chat_subtitle">Canal interno de <em>Usuarios</em></p>
             </div>
           </div>
           <div class="chat_header_actions">
@@ -368,8 +368,8 @@ const _renderSidebar = () => {
             ${isMe ? '<span class="chat_sidebar_me_badge">Tú</span>' : ''}
           </div>
           <div class="chat_sidebar_status_row">
-            <span class="chat_sidebar_role chat_badge_${col.rol || 'smile'}">
-              ${col.rol === 'gestor' ? 'Gestor' : col.rol === 'admin' ? 'Admin' : 'Smile'}
+            <span class="chat_sidebar_role chat_badge_${col.rol || 'usuario'}">
+              ${col.rol === 'gestor' ? 'Gestor' : col.rol === 'admin' ? 'Admin' : col.rol === 'editor' ? 'Editor' : 'Usuario'}
             </span>
             <span class="chat_sidebar_username">@${col.usuario}</span>
           </div>

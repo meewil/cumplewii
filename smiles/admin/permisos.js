@@ -26,7 +26,7 @@ export const render = () => {
         <div class="adp_hero_txt">
           <div class="adp_badge"><i class="fas fa-key"></i> Autorización</div>
           <h1 class="adp_hero_title">Gestión de Permisos</h1>
-          <p class="adp_hero_sub">Promueve usuarios a Gestores, Empresas o revoca sus accesos.</p>
+          <p class="adp_hero_sub">Promueve usuarios a Editores, Gestores o revoca sus accesos.</p>
         </div>
       </div>
     </div>
@@ -139,7 +139,7 @@ function _cerrarModales() { $('#adp_modales').html(''); }
 // ── DATOS VIPs ────────────────────────────────────────────────────────────────
 async function _cargarVIPs() {
   try {
-    const q = query(collection(db, 'smiles'), where('rol', 'in', ['gestor', 'empresa', 'admin']));
+    const q = query(collection(db, 'smiles'), where('rol', 'in', ['editor', 'gestor', 'admin']));
     const snap = await getDocs(q);
     
     _vips = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -157,10 +157,10 @@ function _renderGrid() {
     return;
   }
 
-  const colors = { gestor: '#8b5cf6', empresa: '#f59e0b', admin: '#020617' };
+  const colors = { editor: '#10b981', gestor: '#8b5cf6', admin: '#020617' };
 
   const html = _vips.map(u => {
-    const rol = u.rol || 'smile';
+    const rol = u.rol || 'usuario';
     const c   = colors[rol] || '#38bdf8';
     const nom = u.nombres || u.nombre || u.id;
     const em  = u.email || 'Sin correo registrado';
@@ -183,13 +183,13 @@ function _renderGrid() {
 function _modalRol(u) {
   const nom = u.nombres || u.nombre || u.id;
   const av  = avatar(nom);
-  const cur = u.rol || 'smile';
+  const cur = u.rol || 'usuario';
 
   const ROLES = [
-    { id: 'smile',   ic: 'fa-user',       tit: 'Estudiante', sub: 'Acceso estándar. Modo práctica y lecciones.', c: '#38bdf8' },
-    { id: 'gestor',  ic: 'fa-chalkboard-teacher', tit: 'Gestor (Profesor)', sub: 'Puede crear clases y ver notas de alumnos.', c: '#8b5cf6' },
-    { id: 'empresa', ic: 'fa-building',   tit: 'Empresa',    sub: 'Panel corporativo, departamentos y certificados.', c: '#f59e0b' },
-    { id: 'admin',   ic: 'fa-crown',      tit: 'Admin', sub: 'Control total de la plataforma y usuarios.', c: '#020617' }
+    { id: 'usuario', ic: 'fa-user',       tit: 'Usuario', sub: 'Acceso estándar para registrar y ver ventas.', c: '#38bdf8' },
+    { id: 'editor',  ic: 'fa-edit',       tit: 'Editor',  sub: 'Acceso para redactar artículos del blog y lecciones.', c: '#10b981' },
+    { id: 'gestor',  ic: 'fa-chalkboard-teacher', tit: 'Gestor', sub: 'Gestión de RRHH, precios y reportes.', c: '#8b5cf6' },
+    { id: 'admin',   ic: 'fa-crown',      tit: 'Admin',   sub: 'Control total de la plataforma y usuarios.', c: '#020617' }
   ];
 
   const htmlRoles = ROLES.map(r => `
