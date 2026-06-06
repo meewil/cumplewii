@@ -13,7 +13,7 @@ export let ipdev = import.meta.env.VITE_DEV;
 export let version = 'v11'; // Siempre va "v" para estructura
 
 /** ACTUALIZAR AL TAG POR SEGURIDAD [TAG NUEVO] (1)
-git tag v11 -m "Version v11" ; git push origin v11
+git tag v11 -m "Version v11" ; git push origin v11 
 
 ACTUALIZACIÓN AL MAIN PRINCIPAL DEL PROYECTO [MAIN] (2)
 git add . ; git commit -m "Actualizacion Principal v11.10.10" ; git push origin main
