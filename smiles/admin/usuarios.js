@@ -1,249 +1,643 @@
 // ════════════════════════════════════════════════════════════════════
-// usuarios.js — TypingWii · Admin · Gestión de Usuarios
+// usuarios.js — CumpleWii · Admin · Gestión de Usuarios
 // Jesús es mi Señor 🙏
 // ════════════════════════════════════════════════════════════════════
 import './usuarios.css';
 import $ from 'jquery';
-import { getls, Notificacion, avatar, formatearFechaHora } from '../widev.js';
 import { db } from '../firebase.js';
-import { collection, query, orderBy, limit, getDocs, doc, deleteDoc } from 'firebase/firestore';
+import {
+  collection, getDocs, doc, updateDoc, deleteDoc, serverTimestamp
+} from 'firebase/firestore';
+import { getls, savels, removels, Notificacion, Capi, Capit } from '../widev.js';
 
-const wi = () => getls('wiSmile');
-let _usuarios = [];
-let _filtro = 'todos';
+// ─── Guard ────────────────────────────────────────────────────────────────────
+const wi      = () => getls('wiSmile');
+const isAdmin = () => wi()?.rol === 'admin';
 
-// ── RENDER ────────────────────────────────────────────────────────────────────
-export const render = () => {
-  const u = wi();
-  if (!u || u.rol !== 'admin') return `<div class="adu_page"><div class="adu_empty"><i class="fas fa-ban"></i><p>Acceso denegado.</p></div></div>`;
+// ─── State ────────────────────────────────────────────────────────────────────
+let _usuarios    = [];
+let _filtroTab   = 'todos';   // 'todos' | 'activos' | 'pendientes' | 'suspendidos' | 'inactivos'
+let _filtroSearch = '';
+let _selectedId  = null;
+let _saving      = false;
 
-  return `
-  <div class="adu_page">
+const CACHE_KEY = 'aduUsuarios';
+const CACHE_TTL = 30; // minutos
 
-    <!-- HERO PRO -->
-    <div class="adu_hero">
-      <div class="adu_hero_left">
-        <div class="adu_hero_icon"><i class="fas fa-users-cog"></i></div>
-        <div class="adu_hero_txt">
-          <div class="adu_badge"><i class="fas fa-shield-alt"></i> Seguridad Global</div>
-          <h1 class="adu_hero_title">Usuarios Registrados</h1>
-          <p class="adu_hero_sub">Administra todas las cuentas, empresas y gestores de la plataforma.</p>
-        </div>
-      </div>
-      <div class="adu_hero_actions">
-        <button class="adu_btn_primary" id="adu_btn_sync"><i class="fas fa-sync-alt"></i> Actualizar Base</button>
-      </div>
-    </div>
+// ─── Helpers visuales ────────────────────────────────────────────────────────
+const _initials = u =>
+  ((u.nombre || '') + ' ' + (u.apellidos || '') || u.usuario || '?')
+    .trim().split(/\s+/).slice(0, 2)
+    .map(w => (w[0] || '').toUpperCase()).join('');
 
-    <!-- CONTROLES -->
-    <div class="adu_controls">
-      <div class="adu_filters" id="adu_filters">
-        <button class="adu_filter_btn active" data-rol="todos">Todos</button>
-        <button class="adu_filter_btn" data-rol="usuario">Usuarios</button>
-        <button class="adu_filter_btn" data-rol="smile">Smiles</button>
-        <button class="adu_filter_btn" data-rol="gestor">Gestores</button>
-        <button class="adu_filter_btn" data-rol="empresa">Empresas</button>
-        <button class="adu_filter_btn" data-rol="admin">Admins</button>
-      </div>
-      <div class="adu_search">
-        <i class="fas fa-search"></i>
-        <input type="text" id="adu_input_search" placeholder="Buscar por email, usuario o nombre..." autocomplete="off">
-      </div>
-    </div>
-
-    <!-- TABLA DE USUARIOS -->
-    <div class="adu_table_card">
-      <div class="adu_table_wrap">
-        <table class="adu_table">
-          <thead>
-            <tr>
-              <th>Usuario</th>
-              <th>Rol de Acceso</th>
-              <th>Dependencia</th>
-              <th>Registro</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody id="adu_table_body">
-            <tr><td colspan="5"><div class="adu_empty" style="padding:4vh"><i class="fas fa-spinner fa-spin"></i><p>Cargando base de datos...</p></div></td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- MODALES -->
-    <div id="adu_modales"></div>
-
-  </div>`;
-};
-
-// ── INIT ──────────────────────────────────────────────────────────────────────
-export const init = async () => {
-  const u = wi();
-  if (!u || u.rol !== 'admin') return;
-
-  $(document).off('.adu');
-  await _cargarDatos();
-
-  // Buscar
-  $(document).on('input.adu', '#adu_input_search', function () {
-    _renderTabla();
-  });
-
-  // Filtros
-  $(document).on('click.adu', '.adu_filter_btn', function () {
-    $('.adu_filter_btn').removeClass('active');
-    $(this).addClass('active');
-    _filtro = $(this).data('rol');
-    _renderTabla();
-  });
-
-  // Actualizar DB
-  $(document).on('click.adu', '#adu_btn_sync', async function () {
-    const $i = $(this).find('i').addClass('fa-spin');
-    await _cargarDatos(true);
-    setTimeout(() => $i.removeClass('fa-spin'), 500);
-  });
-
-  // Acciones: Ver / Eliminar
-  $(document).on('click.adu', '.adu_btn_ico.danger', async function () {
-    const id = $(this).data('id');
-    if (!confirm(`¿Atención! Eliminarás a "${id}" de forma permanente. ¿Continuar?`)) return;
-    try {
-      await deleteDoc(doc(db, 'smiles', id));
-      Notificacion('Usuario eliminado', 'info');
-      await _cargarDatos(true);
-    } catch { Notificacion('Error al eliminar', 'error'); }
-  });
-
-  $(document).on('click.adu', '.adu_btn_ico.view', function () {
-    const id = $(this).data('id');
-    const u = _usuarios.find(x => x.id === id);
-    if (u) _modalInfo(u);
-  });
-
-  // Cerrar modales
-  $(document).on('click.adu', '.adu_modal_close, .adu_btn_cancel', () => $('#adu_modales').html(''));
-  $(document).on('click.adu', '.adu_modal_bg', e => { if ($(e.target).hasClass('adu_modal_bg')) $('#adu_modales').html(''); });
-};
-
-export const cleanup = () => {
-  $(document).off('.adu');
-};
-
-// ── DATOS ─────────────────────────────────────────────────────────────────────
-async function _cargarDatos(forzar = false) {
-  try {
-    // Limitamos a 300. (Se remueve orderBy porque si 'fecha' no existe en el doc, Firestore no lo trae)
-    const q = query(collection(db, 'smiles'), limit(300));
-    const snap = await getDocs(q);
-    
-    _usuarios = snap.docs.map(d => ({ id: d.id, usuario: d.id, ...d.data() }));
-    _renderTabla();
-  } catch (err) {
-    console.error('[admin_usuarios] Error:', err);
-    $('#adu_table_body').html('<tr><td colspan="5"><div class="adu_empty" style="padding:4vh"><i class="fas fa-exclamation-triangle"></i><p>Error de conexión.</p></div></td></tr>');
+const _avatar = (u, size = 42) => {
+  // Campo real: u.avatar (definido en login.js y perfil.js)
+  if (u.avatar) {
+    return `<div class="adu_avatar" style="width:${size}px;height:${size}px"><img src="${u.avatar}" alt="${Capi(u.nombre || u.usuario || '?')}" loading="lazy"/></div>`;
   }
-}
+  const ini = _initials(u);
+  const rol = (u.rol || 'usuario').toLowerCase();
+  return `<div class="adu_avatar adu_avatar_ini" data-rol="${rol}" style="width:${size}px;height:${size}px;font-size:${Math.round(size*0.36)}px">${ini}</div>`;
+};
 
-// ── RENDER TABLA ──────────────────────────────────────────────────────────────
-function _renderTabla() {
-  const txt = ($('#adu_input_search').val() || '').toLowerCase();
-  
-  const filtrados = _usuarios.filter(u => {
-    // Filtro por Rol
-    if (_filtro !== 'todos' && (u.rol || 'usuario') !== _filtro) return false;
-    // Filtro por Texto (email, id, nombre)
-    if (txt) {
-      const match = [u.id, u.email, u.nombre, u.nombres, u.apellidos].join(' ').toLowerCase();
-      if (!match.includes(txt)) return false;
+const _rolBadge = rol => {
+  const safe = (rol || 'usuario').toLowerCase();
+  return `<span class="adu_rol_badge adu_rol_${safe}">${Capi(safe)}</span>`;
+};
+
+const _planBadge = plan => {
+  const safe = (plan || 'free').toLowerCase();
+  return `<span class="adu_plan_badge adu_plan_${safe}">${safe.toUpperCase()}</span>`;
+};
+
+const _estadoBadge = estado => {
+  const safe = (estado || 'activo').toLowerCase();
+  return `<span class="adu_status adu_status_${safe}">${Capi(safe)}</span>`;
+};
+
+const _toggleActivoHtml = (id, activo) => {
+  const checked = activo ? 'checked' : '';
+  return `<label class="adu_toggle" title="${activo ? 'Activo' : 'Inactivo'}">
+    <input type="checkbox" class="adu_toggle_activo" data-id="${id}" ${checked}/>
+    <span class="adu_toggle_slider" style="--c:#22c55e"></span>
+  </label>`;
+};
+
+// ─── Filter logic ─────────────────────────────────────────────────────────────
+const _applyFilters = () => {
+  const term = _filtroSearch.toLowerCase().trim();
+  return _usuarios.filter(u => {
+    if (_filtroTab === 'activos'     && !u.activo) return false;
+    if (_filtroTab === 'pendientes'  && (u.estado || 'activo') !== 'pendiente') return false;
+    if (_filtroTab === 'suspendidos' && (u.estado || 'activo') !== 'suspendido') return false;
+    if (_filtroTab === 'inactivos'   && u.activo !== false && (u.estado || 'activo') !== 'inactivo') return false;
+    if (term) {
+      const hay = [u.nombre, u.apellidos, u.usuario, u.email, u.id].join(' ').toLowerCase();
+      if (!hay.includes(term)) return false;
     }
     return true;
   });
+};
 
-  if (!filtrados.length) {
-    $('#adu_table_body').html('<tr><td colspan="5"><div class="adu_empty" style="padding:4vh"><i class="fas fa-user-slash"></i><p>No se encontraron usuarios.</p></div></td></tr>');
+// ─── Stats ────────────────────────────────────────────────────────────────────
+const _updateStats = () => {
+  const total      = _usuarios.length;
+  const activos    = _usuarios.filter(u => u.activo === true).length;
+  const pendientes = _usuarios.filter(u => (u.estado || '') === 'pendiente').length;
+  const inactivos  = _usuarios.filter(u => u.activo === false || (u.estado || '') === 'inactivo').length;
+  $('#adu_stat_total').text(total);
+  $('#adu_stat_activos').text(activos);
+  $('#adu_stat_pendientes').text(pendientes);
+  $('#adu_stat_inactivos').text(inactivos);
+};
+
+// ─── render (HTML estático de la página) ─────────────────────────────────────
+export const render = () => {
+  if (!isAdmin()) return `<div class="adu_wrap"><div class="adu_empty"><i class="fas fa-ban"></i><p>Acceso denegado.</p></div></div>`;
+
+  return /* html */`
+  <div class="adu_wrap" id="adu_wrap">
+
+    <!-- ══ HEADER CARD ══ -->
+    <div class="adu_header_card" id="adu_header_card">
+      <div class="adu_header_card_stripe"></div>
+      <div class="adu_header_inner">
+        <div class="adu_header_text">
+          <h1 class="adu_title">
+            <i class="fas fa-users-cog"></i>
+            Gestión de Usuarios
+          </h1>
+          <p class="adu_subtitle">Administra cuentas, roles, planes y estado de cada usuario de la plataforma</p>
+        </div>
+        <div class="adu_header_actions">
+          <button class="adu_refresh_btn" id="adu_refresh" title="Actualizar lista">
+            <i class="fas fa-sync-alt"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ STATS BAR ══ -->
+    <div class="adu_stats_bar" id="adu_stats">
+      <div class="adu_stat_chip adu_stat_total">
+        <span class="adu_stat_num" id="adu_stat_total">—</span>
+        <span class="adu_stat_label">Total</span>
+      </div>
+      <div class="adu_stat_chip adu_stat_activos">
+        <span class="adu_stat_num" id="adu_stat_activos">—</span>
+        <span class="adu_stat_label">Activos</span>
+      </div>
+      <div class="adu_stat_chip adu_stat_pendientes">
+        <span class="adu_stat_num" id="adu_stat_pendientes">—</span>
+        <span class="adu_stat_label">Pendientes</span>
+      </div>
+      <div class="adu_stat_chip adu_stat_inactivos">
+        <span class="adu_stat_num" id="adu_stat_inactivos">—</span>
+        <span class="adu_stat_label">Inactivos</span>
+      </div>
+    </div>
+
+    <!-- ══ SEARCH BAR ══ -->
+    <div class="adu_search_bar">
+      <i class="fas fa-search adu_search_icon"></i>
+      <input
+        type="text"
+        id="adu_search"
+        class="adu_search_input"
+        placeholder="Buscar por nombre, usuario o email…"
+        autocomplete="off"
+      />
+    </div>
+
+    <!-- ══ FILTER TABS ══ -->
+    <div class="adu_tabs" id="adu_tabs">
+      <button class="adu_tab active" data-tab="todos">
+        <i class="fas fa-list"></i> Todos
+      </button>
+      <button class="adu_tab" data-tab="activos">
+        <i class="fas fa-circle-check"></i> Activos
+      </button>
+      <button class="adu_tab" data-tab="pendientes">
+        <i class="fas fa-clock"></i> Pendientes
+      </button>
+      <button class="adu_tab" data-tab="suspendidos">
+        <i class="fas fa-ban"></i> Suspendidos
+      </button>
+      <button class="adu_tab" data-tab="inactivos">
+        <i class="fas fa-circle-xmark"></i> Inactivos
+      </button>
+    </div>
+
+    <!-- ══ TABLE ══ -->
+    <div class="adu_table_outer">
+      <table class="adu_table" id="adu_table">
+        <thead>
+          <tr>
+            <th>Avatar</th>
+            <th>Nombre</th>
+            <th>Usuario</th>
+            <th>Email</th>
+            <th>Rol</th>
+            <th>Plan</th>
+            <th>Activo</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="adu_tbody">
+          <tr><td colspan="9" class="adu_loading_cell">
+            <div class="adu_spinner"><i class="fas fa-circle-notch fa-spin"></i> Cargando usuarios…</div>
+          </td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- ══ OVERLAY ══ -->
+  <div class="adu_overlay" id="adu_overlay"></div>
+
+  <!-- ══ SIDE PANEL ══ -->
+  <aside class="adu_panel" id="adu_panel" aria-hidden="true">
+    <div class="adu_panel_header">
+      <div class="adu_panel_avatar_wrap" id="adu_panel_avatar"></div>
+      <div class="adu_panel_title_wrap">
+        <h2 class="adu_panel_name" id="adu_panel_name">Usuario</h2>
+        <span class="adu_panel_user" id="adu_panel_user">@usuario</span>
+      </div>
+      <button class="adu_panel_close" id="adu_panel_close" aria-label="Cerrar panel">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <div class="adu_panel_body">
+      <form id="adu_edit_form" autocomplete="off">
+        <input type="hidden" id="edit_uid"/>
+
+        <!-- Datos Personales -->
+        <div class="adu_form_section">
+          <div class="adu_form_section_title"><i class="fas fa-id-card"></i> Datos Personales</div>
+          <div class="adu_form_row">
+            <label class="adu_form_label" for="edit_nombre">Nombre</label>
+            <input class="adu_form_input" id="edit_nombre" type="text" placeholder="Nombre"/>
+          </div>
+          <div class="adu_form_row">
+            <label class="adu_form_label" for="edit_apellidos">Apellidos</label>
+            <input class="adu_form_input" id="edit_apellidos" type="text" placeholder="Apellidos"/>
+          </div>
+          <div class="adu_form_row">
+            <label class="adu_form_label" for="edit_usuario">Usuario (ID)</label>
+            <input class="adu_form_input adu_input_locked" id="edit_usuario" type="text" disabled/>
+          </div>
+          <div class="adu_form_row">
+            <label class="adu_form_label" for="edit_email">Email</label>
+            <input class="adu_form_input adu_input_locked" id="edit_email" type="email" disabled/>
+          </div>
+          <div class="adu_form_row">
+            <label class="adu_form_label" for="edit_bio">Bio</label>
+            <textarea class="adu_form_input adu_form_textarea" id="edit_bio" placeholder="Descripción breve del usuario…" rows="2"></textarea>
+          </div>
+          <div class="adu_form_row">
+            <label class="adu_form_label" for="edit_avatar">Avatar (URL)</label>
+            <input class="adu_form_input" id="edit_avatar" type="url" placeholder="https://tu-foto.com/imagen.jpg"/>
+          </div>
+        </div>
+
+        <!-- Datos de Cuenta -->
+        <div class="adu_form_section">
+          <div class="adu_form_section_title"><i class="fas fa-shield-halved"></i> Cuenta y Acceso</div>
+          <div class="adu_form_row">
+            <label class="adu_form_label" for="edit_rol">Rol de acceso</label>
+            <select class="adu_form_select" id="edit_rol">
+              <option value="usuario">Usuario</option>
+              <option value="smile">Smile</option>
+              <option value="gestor">Gestor</option>
+              <option value="empresa">Empresa</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          <div class="adu_form_row">
+            <label class="adu_form_label" for="edit_plan">Plan de acceso</label>
+            <select class="adu_form_select" id="edit_plan">
+              <option value="free">Free</option>
+              <option value="pro">Pro</option>
+              <option value="vip">Vip</option>
+            </select>
+          </div>
+          <div class="adu_form_row">
+            <label class="adu_form_label" for="edit_estado">Estado</label>
+            <select class="adu_form_select" id="edit_estado">
+              <option value="activo">Activo</option>
+              <option value="pendiente">Pendiente</option>
+              <option value="suspendido">Suspendido</option>
+              <option value="inactivo">Inactivo</option>
+            </select>
+          </div>
+          <div class="adu_form_row adu_form_row_inline">
+            <label class="adu_form_label">Cuenta activa</label>
+            <label class="adu_toggle" id="edit_activo_toggle">
+              <input type="checkbox" id="edit_activo"/>
+              <span class="adu_toggle_slider" style="--c:#22c55e"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="adu_panel_footer">
+          <button type="submit" class="adu_btn_save" id="adu_btn_save">
+            <i class="fas fa-save"></i>
+            <span>Guardar cambios</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </aside>
+`;
+};
+
+// ─── _updateStats ─────────────────────────────────────────────────────────────
+
+// ─── _renderTable ─────────────────────────────────────────────────────────────
+const _renderTable = () => {
+  _updateStats();
+  const lista = _applyFilters();
+
+  lista.sort((a, b) => {
+    const ap = a.activo ? 0 : 1;
+    const bp = b.activo ? 0 : 1;
+    if (ap !== bp) return ap - bp;
+    return (a.nombre || a.usuario || '').localeCompare(b.nombre || b.usuario || '', 'es');
+  });
+
+  if (!lista.length) {
+    const term = _filtroSearch.trim();
+    $('#adu_tbody').html(`
+      <tr><td colspan="9">
+        <div class="adu_empty">
+          <i class="fas fa-user-slash"></i>
+          <p>${term ? `Sin resultados para "<strong>${term}</strong>"` : 'No hay usuarios en esta categoría'}</p>
+        </div>
+      </td></tr>`);
     return;
   }
 
-  const html = filtrados.map(u => {
-    const nom = u.nombres || u.nombre || u.id;
-    const em  = u.email || '—';
-    const av  = avatar(nom);
-    const rol = u.rol || 'usuario';
-    const fDate = u.fecha?.toDate ? formatearFechaHora(u.fecha) : '—';
-    const dep = u.empresa || u.empresa_id || u.gestor || u.gestor_id || 'Independiente';
-
-    return `
-      <tr class="adu_row">
-        <td>
-          <div class="adu_user_cell">
-            <div class="adu_av">${av}</div>
-            <div>
-              <div class="adu_nom">${nom}</div>
-              <div class="adu_eml">${em}</div>
-            </div>
-          </div>
-        </td>
-        <td>
-          <div class="adu_role_badge ${rol}"><i class="fas fa-circle" style="font-size:0.6em;margin-right:0.4vh"></i> ${rol}</div>
-        </td>
-        <td>
-          <span style="color:var(--tx3);font-weight:600"><i class="fas fa-building"></i> ${dep}</span>
-        </td>
-        <td>
-          <div class="adu_date">${fDate.split(',')[0]}<small>${fDate.split(',')[1] || ''}</small></div>
-        </td>
-        <td>
-          <div class="adu_actions">
-            <button class="adu_btn_ico view" data-id="${u.id}" title="Ver detalles"><i class="fas fa-eye"></i></button>
-            <button class="adu_btn_ico danger" data-id="${u.id}" title="Eliminar usuario"><i class="fas fa-trash"></i></button>
-          </div>
+  const rows = lista.map(u => {
+    const isPendiente = (u.estado || '') === 'pendiente';
+    const fullName    = Capit((u.nombre || '') + ' ' + (u.apellidos || '')).trim() || '—';
+    return /* html */`
+      <tr data-id="${u.id}" class="${!u.activo ? 'adu_row_inactive' : ''}">
+        <td>${_avatar(u, 40)}</td>
+        <td class="adu_nombre">${fullName}</td>
+        <td class="adu_usuario">@${u.usuario || u.id || '—'}</td>
+        <td class="adu_email">${u.email || '—'}</td>
+        <td>${_rolBadge(u.rol)}</td>
+        <td>${_planBadge(u.plan)}</td>
+        <td>${_toggleActivoHtml(u.id, u.activo)}</td>
+        <td>${_estadoBadge(u.estado)}</td>
+        <td class="adu_actions_cell">
+          <button class="adu_btn_editar" data-id="${u.id}" title="Editar usuario">
+            <i class="fas fa-pen-to-square"></i> Editar
+          </button>
+          ${isPendiente ? `
+            <button class="adu_btn_approve" data-id="${u.id}" title="Aprobar cuenta">
+              <i class="fas fa-check"></i>
+            </button>
+            <button class="adu_btn_reject" data-id="${u.id}" title="Rechazar solicitud">
+              <i class="fas fa-times"></i>
+            </button>` : ''}
+          <button class="adu_btn_delete" data-id="${u.id}" title="Eliminar usuario">
+            <i class="fas fa-trash"></i>
+          </button>
         </td>
       </tr>`;
   }).join('');
 
-  $('#adu_table_body').html(html);
-}
+  $('#adu_tbody').html(rows);
+};
 
-// ── MODAL DETALLES ────────────────────────────────────────────────────────────
-function _modalInfo(u) {
-  const fDate = u.fecha?.toDate ? formatearFechaHora(u.fecha) : 'Desconocido';
-  
-  $('#adu_modales').html(`
-    <div class="adu_modal_bg">
-      <div class="adu_modal_card">
-        <div class="adu_modal_hdr">
-          <h3 class="adu_modal_title"><i class="fas fa-address-card"></i> Información del Usuario</h3>
-          <button class="adu_modal_close"><i class="fas fa-times"></i></button>
+// ─── Panel helpers ────────────────────────────────────────────────────────────
+const _openPanel = id => {
+  const u = _usuarios.find(u => u.id === id);
+  if (!u) return;
+  _selectedId = id;
+
+  const nombre = Capit((u.nombre || '') + ' ' + (u.apellidos || '')).trim() || u.usuario || '—';
+  $('#adu_panel_avatar').html(_avatar(u, 52));
+  $('#adu_panel_name').text(nombre);
+  $('#adu_panel_user').text('@' + (u.usuario || u.id || '—'));
+
+  $('#edit_uid').val(id);
+  $('#edit_nombre').val(u.nombre || '');
+  $('#edit_apellidos').val(u.apellidos || '');
+  $('#edit_usuario').val(u.usuario || u.id || '');
+  $('#edit_email').val(u.email || '');
+  $('#edit_bio').val(u.bio || '');
+  $('#edit_avatar').val(u.avatar || '');
+  $('#edit_rol').val(u.rol || 'usuario');
+  $('#edit_plan').val(u.plan || 'free');
+  $('#edit_estado').val(u.estado || 'activo');
+  $('#edit_activo').prop('checked', u.activo !== false);
+
+  $('#adu_panel').addClass('open').attr('aria-hidden', 'false');
+  $('#adu_overlay').addClass('visible');
+  $('body').addClass('adu_no_scroll');
+};
+
+const _closePanel = () => {
+  _selectedId = null;
+  $('#adu_panel').removeClass('open').attr('aria-hidden', 'true');
+  $('#adu_overlay').removeClass('visible');
+  $('body').removeClass('adu_no_scroll');
+};
+
+// ─── Toggle activo inline ────────────────────────────────────────────────────
+const _toggleActivo = async id => {
+  const idx = _usuarios.findIndex(u => u.id === id);
+  if (idx === -1) return;
+  const newVal = !_usuarios[idx].activo;
+  const nombre = Capi(_usuarios[idx].nombre || _usuarios[idx].usuario || id);
+  try {
+    await updateDoc(doc(db, 'smiles', id), { activo: newVal });
+    _usuarios[idx].activo = newVal;
+    removels(CACHE_KEY);
+    savels(CACHE_KEY, _usuarios, CACHE_TTL);
+    _renderTable();
+    Notificacion(`${nombre} ${newVal ? 'activado ✅' : 'desactivado ❌'}`, newVal ? 'success' : 'warning');
+  } catch (err) {
+    console.error('[adu] toggleActivo:', err);
+    Notificacion('Error al cambiar estado', 'error');
+    _renderTable();
+  }
+};
+
+// ─── Aprobar / Rechazar ───────────────────────────────────────────────────────
+const _aprobar = async id => {
+  const idx = _usuarios.findIndex(u => u.id === id);
+  if (idx === -1) return;
+  const nombre = Capi(_usuarios[idx].nombre || _usuarios[idx].usuario || id);
+  try {
+    await updateDoc(doc(db, 'smiles', id), { estado: 'activo', activo: true });
+    _usuarios[idx].estado = 'activo';
+    _usuarios[idx].activo = true;
+    removels(CACHE_KEY);
+    savels(CACHE_KEY, _usuarios, CACHE_TTL);
+    _renderTable();
+    Notificacion(`${nombre} aprobado ✅`, 'success');
+  } catch (err) {
+    Notificacion('Error al aprobar', 'error');
+  }
+};
+
+const _rechazar = async id => {
+  const idx = _usuarios.findIndex(u => u.id === id);
+  if (idx === -1) return;
+  const nombre = Capi(_usuarios[idx].nombre || _usuarios[idx].usuario || id);
+  try {
+    await updateDoc(doc(db, 'smiles', id), { estado: 'inactivo', activo: false });
+    _usuarios[idx].estado = 'inactivo';
+    _usuarios[idx].activo = false;
+    removels(CACHE_KEY);
+    savels(CACHE_KEY, _usuarios, CACHE_TTL);
+    _renderTable();
+    Notificacion(`Solicitud de ${nombre} rechazada`, 'warning');
+  } catch (err) {
+    Notificacion('Error al rechazar', 'error');
+  }
+};
+
+// ─── Eliminar ─────────────────────────────────────────────────────────────────
+const _eliminar = async id => {
+  const u      = _usuarios.find(u => u.id === id);
+  const nombre = Capi(u?.nombre || u?.usuario || id);
+  if (!confirm(`¿Eliminar al usuario "${nombre}"? Esta acción es permanente.`)) return;
+  try {
+    await deleteDoc(doc(db, 'smiles', id));
+    _usuarios = _usuarios.filter(u => u.id !== id);
+    removels(CACHE_KEY);
+    savels(CACHE_KEY, _usuarios, CACHE_TTL);
+    _renderTable();
+    Notificacion(`${nombre} eliminado`, 'info');
+  } catch (err) {
+    Notificacion('Error al eliminar', 'error');
+  }
+};
+
+// ─── Save edit ────────────────────────────────────────────────────────────────
+const _saveEdit = async () => {
+  if (_saving || !_selectedId) return;
+  _saving = true;
+
+  const $btn = $('#adu_btn_save');
+  $btn.addClass('loading').prop('disabled', true);
+  $('#adu_header_card').addClass('adu_loading');
+
+  const data = {
+    nombre:    $('#edit_nombre').val().trim(),
+    apellidos: $('#edit_apellidos').val().trim(),
+    bio:       $('#edit_bio').val().trim(),
+    avatar:    $('#edit_avatar').val().trim(),
+    rol:       $('#edit_rol').val(),
+    plan:      $('#edit_plan').val(),
+    estado:    $('#edit_estado').val(),
+    activo:    $('#edit_activo').is(':checked'),
+    actualizado: serverTimestamp(),
+  };
+
+  // Quitar campos vacíos (salvo booleanos)
+  Object.keys(data).forEach(k => {
+    if (data[k] === '' && k !== 'activo') delete data[k];
+  });
+
+  try {
+    await updateDoc(doc(db, 'smiles', _selectedId), data);
+    const idx = _usuarios.findIndex(u => u.id === _selectedId);
+    if (idx !== -1) Object.assign(_usuarios[idx], data);
+    removels(CACHE_KEY);
+    savels(CACHE_KEY, _usuarios, CACHE_TTL);
+    _renderTable();
+    _closePanel();
+    Notificacion('Usuario actualizado ✅', 'success');
+  } catch (err) {
+    console.error('[adu] saveEdit:', err);
+    Notificacion('Error al guardar cambios', 'error');
+  } finally {
+    _saving = false;
+    $btn.removeClass('loading').prop('disabled', false);
+    $('#adu_header_card').removeClass('adu_loading');
+  }
+};
+
+// ─── Carga de datos ──────────────────────────────────────────────────────────
+const _loadUsuarios = async (forceReload = false) => {
+  if (!forceReload) {
+    const cached = getls(CACHE_KEY);
+    if (cached) {
+      _usuarios = cached;
+      _renderTable();
+      return;
+    }
+  }
+
+  $('#adu_tbody').html(`
+    <tr><td colspan="9" class="adu_loading_cell">
+      <div class="adu_spinner"><i class="fas fa-circle-notch fa-spin"></i> Cargando usuarios…</div>
+    </td></tr>`);
+
+  try {
+    const snap = await getDocs(collection(db, 'smiles'));
+    _usuarios = snap.docs.map(d => ({ id: d.id, usuario: d.id, ...d.data() }));
+    _usuarios.sort((a, b) => (a.nombre || a.usuario || '').localeCompare(b.nombre || b.usuario || '', 'es'));
+    savels(CACHE_KEY, _usuarios, CACHE_TTL);
+    _renderTable();
+  } catch (err) {
+    console.error('[adu] loadUsuarios:', err);
+    $('#adu_tbody').html(`
+      <tr><td colspan="9">
+        <div class="adu_empty adu_empty_error">
+          <i class="fas fa-exclamation-triangle"></i>
+          <p>Error al cargar usuarios. Intenta de nuevo.</p>
         </div>
-        <div class="adu_modal_body">
-          <div class="adu_field">
-            <label>Username (ID)</label>
-            <input type="text" class="adu_input" value="${u.id}" disabled>
-          </div>
-          <div class="adu_field">
-            <label>Nombres y Apellidos</label>
-            <input type="text" class="adu_input" value="${u.nombres || u.nombre || ''} ${u.apellidos || ''}" disabled>
-          </div>
-          <div class="adu_field">
-            <label>Correo Electrónico</label>
-            <input type="text" class="adu_input" value="${u.email || '—'}" disabled>
-          </div>
-          <div style="display:flex;gap:2vh">
-            <div class="adu_field" style="flex:1">
-              <label>Rol de Acceso</label>
-              <input type="text" class="adu_input" value="${u.rol || 'usuario'}" style="text-transform:uppercase;font-weight:bold" disabled>
-            </div>
-            <div class="adu_field" style="flex:1">
-              <label>Fecha de Registro</label>
-              <input type="text" class="adu_input" value="${fDate}" disabled>
-            </div>
-          </div>
-        </div>
-        <div class="adu_modal_foot">
-          <button class="adu_btn_cancel">Cerrar panel</button>
-        </div>
-      </div>
-    </div>`);
-}
+      </td></tr>`);
+    Notificacion('Error al cargar usuarios', 'error');
+  }
+};
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+export const init = async () => {
+  if (!isAdmin()) return;
+
+  $(document).off('.adu');
+  _filtroTab    = 'todos';
+  _filtroSearch = '';
+  _selectedId   = null;
+
+  // Mostrar inmediatamente
+  $('#adu_wrap').addClass('visible');
+
+  // Cargar datos (usa cache si existe)
+  _loadUsuarios(false);
+
+  // ── Búsqueda
+  $(document).on('input.adu', '#adu_search', function () {
+    _filtroSearch = $(this).val();
+    _renderTable();
+  });
+
+  // ── Tabs
+  $(document).on('click.adu', '.adu_tab', function () {
+    _filtroTab = $(this).data('tab');
+    $('.adu_tab').removeClass('active');
+    $(this).addClass('active');
+    _renderTable();
+  });
+
+  // ── Refresh
+  $(document).on('click.adu', '#adu_refresh', async function () {
+    const $btn = $(this);
+    $btn.addClass('adu_spinning');
+    _filtroSearch = '';
+    _filtroTab    = 'todos';
+    $('#adu_search').val('');
+    $('.adu_tab').removeClass('active');
+    $('.adu_tab[data-tab="todos"]').addClass('active');
+    await _loadUsuarios(true);
+    $btn.removeClass('adu_spinning');
+    Notificacion('Lista actualizada', 'success');
+  });
+
+  // ── Toggle activo inline
+  $(document).on('change.adu', '.adu_toggle_activo', function () {
+    _toggleActivo($(this).data('id'));
+  });
+
+  // ── Abrir panel edición
+  $(document).on('click.adu', '.adu_btn_editar', function (e) {
+    e.stopPropagation();
+    _openPanel($(this).data('id'));
+  });
+
+  // ── Cerrar panel — botón X
+  $(document).on('click.adu', '#adu_panel_close', _closePanel);
+
+  // ── Cerrar panel — overlay
+  $(document).on('click.adu', '#adu_overlay', _closePanel);
+
+  // ── Cerrar panel — Escape
+  $(document).on('keydown.adu', function (e) {
+    if (e.key === 'Escape') _closePanel();
+  });
+
+  // ── Submit form
+  $(document).on('submit.adu', '#adu_edit_form', function (e) {
+    e.preventDefault();
+    _saveEdit();
+  });
+
+  // ── Aprobar
+  $(document).on('click.adu', '.adu_btn_approve', function (e) {
+    e.stopPropagation();
+    _aprobar($(this).data('id'));
+  });
+
+  // ── Rechazar
+  $(document).on('click.adu', '.adu_btn_reject', function (e) {
+    e.stopPropagation();
+    _rechazar($(this).data('id'));
+  });
+
+  // ── Eliminar
+  $(document).on('click.adu', '.adu_btn_delete', function (e) {
+    e.stopPropagation();
+    _eliminar($(this).data('id'));
+  });
+};
+
+// ─── CLEANUP ──────────────────────────────────────────────────────────────────
+export const cleanup = () => {
+  $(document).off('.adu');
+  $('body').removeClass('adu_no_scroll');
+  _usuarios     = [];
+  _filtroTab    = 'todos';
+  _filtroSearch = '';
+  _selectedId   = null;
+  _saving       = false;
+};

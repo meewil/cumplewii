@@ -69,18 +69,14 @@ export const NAV = {
   },
   admin: {
     nvleft: [
-      { href: '/admin',    ico: 'fa-globe', txt: 'Plataforma' },
-      { href: '/usuarios', ico: 'fa-users', txt: 'Usuarios'   },
-      { href: '/cumples',  ico: 'fa-cake-candles', txt: 'Cumples' },
-      { href: '/meses',    ico: 'fa-calendar-days', txt: 'Meses' },
-      { href: '/musica',   ico: 'fa-headphones',   txt: 'Música' },
-      { href: '/chat',     ico: 'fa-comments', txt: 'Chat Grupal' },
+      { href: '/admin',    ico: 'fa-globe',   txt: 'Plataforma' },
+      { href: '/usuarios', ico: 'fa-users',   txt: 'Usuarios'   },
+      { href: '/paginas',  ico: 'fa-sitemap', txt: 'Páginas'   },
       ...COMUN,
     ],
     nvright: [
-      { href: '/word',      ico: 'fa-rocket', txt: 'Planificar'     },
-      { href: '/nuevo',    ico: 'fa-plus',        txt: 'Post' },
-      { href: '/notas',    ico: 'fa-comments',    txt: 'Book'   },
+      { href: '/notas',    ico: 'fa-book-open', txt: 'Notas'      },
+      { href: '/chat',     ico: 'fa-comments',  txt: 'Chat Grupal' },
       { isPerfil: true }, { isSalir: true },
     ],
   },
@@ -134,6 +130,7 @@ export const RUTAS = [
   { path: '/admin',    area: 'admin/',   roles: ['admin']          },
   { path: '/usuarios', area: 'admin/',   roles: ['admin']          },
   { path: '/verificar',area: 'admin/verificar/', roles: ['admin']   },
+  { path: '/paginas',  area: 'admin/',           roles: ['admin']   },
 ];
 
 // ── GLOB — Vite mapea todos los módulos en build time ───────────────────────────────────────────────
@@ -211,7 +208,7 @@ class WiRutas {
     const norm = wiPath.limpiar(ruta) === '/' ? `/${this.HOME}` : wiPath.limpiar(ruta);
 
     // ── GUARD ADMIN ───────────────────────────────────────────────────────────
-    if (['/admin', '/usuarios'].includes(norm)) {
+    if (['/admin', '/usuarios', '/paginas'].includes(norm)) {
       const { getls } = await import('./widev.js');
       const wi = getls('wiSmile'), go = r => (this.cargand = false, this.navigate(r, true));
       const dest = !wi || wi.rol !== 'admin' ? '/' : wi.estado !== 'activo' ? '/registrado' : !sessionStorage.getItem('vault_unlocked') ? '/verificar' : null;
